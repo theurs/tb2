@@ -1008,6 +1008,7 @@ def summ_text_thread(message: telebot.types.Message):
                             my_log.log2(f'tb:sum: {error2}')
                             m = 'Не нашел тут текста. Возможно что в видео на ютубе нет субтитров или страница не показывает текст роботам'
                             bot.reply_to(message, m, parse_mode='Markdown')
+                            my_log.log_report(bot, message, chat_id_full, message.from_user.id, '/sum ' + url, m)
                             my_log.log_echo(message, m)
                             return
                         if res:
@@ -1032,6 +1033,7 @@ def summ_text_thread(message: telebot.types.Message):
                             error = 'Не смог прочитать текст с этой страницы.'
                             bot.reply_to(message, error)
                             my_log.log_echo(message, error)
+                            my_log.log_report(bot, message, chat_id_full, message.from_user.id, '/sum ' + url, error)
                             return
         help = """Пример: /sum https://youtu.be/3i123i6Bf-U"""
         bot.reply_to(message, help, parse_mode = 'Markdown')
