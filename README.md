@@ -10,7 +10,7 @@
 
 1. Установите Python 3.8+.
 
-2. Установите словари и прочее `sudo apt install ffmpeg python3-venv sox trans`
+2. Установите словари и прочее `sudo apt install aspell aspell-en aspell-ru aspell-uk enchant-2 ffmpeg python3-venv sox translate-shell`
 
 3. Клонируйте репозиторий с помощью команды:
 
