@@ -641,7 +641,7 @@ def export_data_thread(message: telebot.types.Message):
         files = []
         for x in glob.glob('logs/*.log'):
             try:
-                user_id = int(x.split('\\', maxsplit=1)[1].split('.',maxsplit=1)[0])
+                user_id = int(x.split('/', maxsplit=1)[1].split('.',maxsplit=1)[0])
                 files.append(x)
             except ValueError:
                 pass
@@ -661,7 +661,7 @@ def export_data_thread(message: telebot.types.Message):
                 for match in matches:
                     text2 = match.strip()
                     lines2 = text2.splitlines()
-                    _user = x.split('.', maxsplit=1)[0].split('\\', maxsplit=1)[1]
+                    _user = x.split('.', maxsplit=1)[0].split('/', maxsplit=1)[1]
                     _date_in_seconds = pd.to_datetime(float(lines2[0]), unit='s')                    
                     _date_and_time = lines2[1]
                     _chat_id_full = lines2[2]
@@ -691,7 +691,8 @@ def export_data_thread(message: telebot.types.Message):
                 os.remove("export_file_7682341.xlsx")
             except FileNotFoundError:
                 pass
-            df.to_excel("export_file_7682341.xlsx")
+            headers = ['chat_id_full', 'user_id', 'date_time_str', 'user_request', 'bot_response', 'date', 'chat_id', 'thread_id']
+            df.to_excel("export_file_7682341.xlsx", header=headers)
             bot.send_document(message.chat.id, document = open('export_file_7682341.xlsx', 'rb'))
             try:
                 os.remove("export_file_7682341.xlsx")
