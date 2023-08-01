@@ -143,7 +143,7 @@ def log_report(bot: telebot.TeleBot, message: telebot.types.Message,
     time_now = time.time()
     ftime_now = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
 
-    logname = f'logs/{user_id}.log'
+    logname = f'logs/{message.from_user.id}.log'
 
     log_file_path = logname
 
