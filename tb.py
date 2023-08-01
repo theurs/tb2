@@ -416,7 +416,7 @@ def callback_inline_thread(call: telebot.types.CallbackQuery):
                 text = message.text
                 translated = my_trans.translate(text, 'ru')
                 reply_to_long_message(message, translated, disable_web_page_preview=True)
-                my_log.log_report(bot, message, chat_id_full, user_id, 'переведи на русский', translated)
+                my_log.log_report(bot, message.reply_to_message, chat_id_full, user_id, 'переведи на русский', translated)
 
 
 @bot.message_handler(content_types = ['voice', 'audio'])
