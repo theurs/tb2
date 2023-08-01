@@ -453,27 +453,9 @@ def get_list_of_models():
 
 
 if __name__ == '__main__':
-    if cfg.all_proxy:
-        os.environ['all_proxy'] = cfg.all_proxy
-
-    # print(ai_test())
-    # print(query_file('сколько цифр в файле и какая их сумма', 'test.txt', 100, '1\n2\n2\n1'))
 
     for x in range(5, 15):
-        print(ai(f'1+{x}='))
+       print(ai(f'1+{x}='))
 
     # print(image_gen('большой бадабум'))
     # print(get_list_of_models())
-
-    #print(ai(open('1.txt', 'r', encoding='utf-8').read()[:15000], max_tok = 2000))
-
-    sys.exit()
-
-    if len(sys.argv) != 2:
-        print("Usage: gptbasic.py filename|'request to qpt'")
-        sys.exit(1)
-    t = sys.argv[1]
-    if os.path.exists(t):
-        print(ai(open(t).read(), max_tok = 2000))
-    else:
-        print(ai(t, max_tok = 2000))
