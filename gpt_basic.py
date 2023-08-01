@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-import os
 import json
+import random
 import re
-import sys
 from pathlib import Path
 
 import enchant
@@ -12,7 +11,6 @@ import openai
 
 import cfg
 import utils
-import my_dic
 import my_log
 
 
@@ -32,7 +30,11 @@ def ai(prompt: str = '', temp: float = 0.5, max_tok: int = 2000, timeou: int = 1
 
     response = ''
 
-    for server in cfg.openai_servers:
+    # копируем и перемешиваем список серверов
+    shuffled_servers = cfg.openai_servers[:]
+    random.shuffle(shuffled_servers)
+
+    for server in shuffled_servers:
         openai.api_base = server[0]
         openai.api_key = server[1]
 
@@ -373,7 +375,11 @@ def stt(audio_file: str) -> str:
     audio_file_new = Path(utils.convert_to_mp3(audio_file))
     audio_file_bytes = open(audio_file_new, "rb")
 
-    for server in servers:
+    # копируем и перемешиваем список серверов
+    shuffled_servers = servers[:]
+    random.shuffle(shuffled_servers)
+
+    for server in shuffled_servers:
         openai.api_base = server[0]
         openai.api_key = server[1]
         try:
@@ -414,7 +420,11 @@ def image_gen(prompt: str, amount: int = 10, size: str = '1024x1024'):
     assert amount <= 10, 'Too many images to gen'
     assert size in ('1024x1024','512x512','256x256'), 'Wrong image size'
 
-    for server in servers:
+    # копируем и перемешиваем список серверов
+    shuffled_servers = servers[:]
+    random.shuffle(shuffled_servers)
+
+    for server in shuffled_servers:
         openai.api_base = server[0]
         openai.api_key = server[1]
         try:
