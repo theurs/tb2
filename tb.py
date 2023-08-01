@@ -691,8 +691,7 @@ def export_data_thread(message: telebot.types.Message):
                 os.remove("export_file_7682341.xlsx")
             except FileNotFoundError:
                 pass
-            headers = ['chat_id_full', 'user_id', 'date_time_str', 'user_request', 'bot_response', 'date', 'chat_id', 'thread_id']
-            df.to_excel("export_file_7682341.xlsx", header=headers)
+            df.to_excel("export_file_7682341.xlsx")
             bot.send_document(message.chat.id, document = open('export_file_7682341.xlsx', 'rb'))
             try:
                 os.remove("export_file_7682341.xlsx")
