@@ -401,12 +401,12 @@ def callback_inline_thread(call: telebot.types.CallbackQuery):
                 # обработка нажатия кнопки "Забудь всё"
                 DIALOGS_DB[chat_id_full] = []
                 bot.reply_to(message, 'chatGPT стёр память')
-                my_log.log_report(bot, message, chat_id_full, user_id, 'Забудь всё', 'chatGPT стёр память')
+                my_log.log_report(bot, message.reply_to_message, chat_id_full, user_id, 'Забудь всё', 'chatGPT стёр память')
             elif call.data == 'forget_all_bard':
                 # обработка нажатия кнопки "Забудь всё"
                 my_bard.reset_bard_chat(chat_id_full)
                 bot.reply_to(message, 'Google bard стёр память')
-                my_log.log_report(bot, message, chat_id_full, user_id, 'Забудь всё', 'Google bard стёр память')
+                my_log.log_report(bot, message.reply_to_message, chat_id_full, user_id, 'Забудь всё', 'Google bard стёр память')
             elif call.data == 'tts':
                 lang = my_trans.detect_lang(message.text) or 'ru'
                 message.text = f'/tts {lang} {message.text}'
