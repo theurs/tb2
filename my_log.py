@@ -24,26 +24,10 @@ if not os.path.exists('logs'):
     os.mkdir('logs')
 
 
-def log(message: telebot.types.Message, reply_from_bot: str = '') -> None:
-
-    #log_file_path = os.path.join(os.getcwd(), f'logs/{message.chat.id}.log')
-    log_file_path = f'logs/{message.chat.id}.log'
-    with lock:
-        with open(log_file_path, 'a', encoding="utf-8") as log_file:
-            time_now = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
-            log_file.write(f"[{time_now}] [{message.chat.type}] [{('user' if message.chat.type == 'private' else 'chat')} \
-{message.chat.username or message.chat.first_name or message.chat.title or ''}] \
-[{message.from_user.first_name or message.from_user.username or ''}]: \
-{message.text or message.caption}\n")
-            if reply_from_bot:
-                log_file.write(f"[{time_now}] Bot replied: {reply_from_bot}\n")
-            log_file.write('\n\n')
-
-
 def log2(text: str) -> None:
     """для дебага"""
     log_file_path = 'logs/debug.log'
-    open(log_file_path, 'a', encoding="utf-8").write(f'{text}\n=========================================================================================\n')
+    open(log_file_path, 'a', encoding="utf-8").write(f'{text}\n{"="*89}\n')
 
 
 def log_echo(message: telebot.types.Message, reply_from_bot: str = '', debug: bool = False) -> None:
@@ -55,6 +39,7 @@ def log_echo(message: telebot.types.Message, reply_from_bot: str = '', debug: bo
     user_name = message.from_user.first_name or message.from_user.username or ''
     
     logname = f'logs/[{chat_name}] [{private_or_chat}] [{message.chat.type}] [{message.chat.id}].log'.replace('[private] [private]', '[private]').replace('[chat] [supergroup]', '[chat]')
+    logname = logname.replace('/', '⁄')
 
     topic_id = 0
 
@@ -90,6 +75,7 @@ def log_media(message: telebot.types.Message) -> None:
     caption = message.caption or ''
 
     logname = f'logs/[{chat_name}] [{private_or_chat}] [{message.chat.type}] [{message.chat.id}].log'.replace('[private] [private]', '[private]').replace('[chat] [supergroup]', '[chat]')
+    logname = logname.replace('/', '⁄')
 
     topic_id = 0
 
@@ -156,6 +142,7 @@ def log_report(bot: telebot.TeleBot, message: telebot.types.Message,
     ftime_now = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
 
     logname = f'logs/{user_id}.log'
+    logname = logname.replace('/', '⁄')
 
     log_file_path = logname
 
