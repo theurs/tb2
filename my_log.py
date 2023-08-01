@@ -37,9 +37,10 @@ def log_echo(message: telebot.types.Message, reply_from_bot: str = '', debug: bo
     private_or_chat = 'private' if message.chat.type == 'private' else 'chat'
     chat_name = message.chat.username or message.chat.first_name or message.chat.title or ''
     user_name = message.from_user.first_name or message.from_user.username or ''
+    chat_name = chat_name.replace('/', '⁄')
+    user_name = user_name.replace('/', '⁄')
     
     logname = f'logs/[{chat_name}] [{private_or_chat}] [{message.chat.type}] [{message.chat.id}].log'.replace('[private] [private]', '[private]').replace('[chat] [supergroup]', '[chat]')
-    logname = logname.replace('/', '⁄')
 
     topic_id = 0
 
@@ -71,11 +72,12 @@ def log_media(message: telebot.types.Message) -> None:
     private_or_chat = 'private' if message.chat.type == 'private' else 'chat'
     chat_name = message.chat.username or message.chat.first_name or message.chat.title or ''
     user_name = message.from_user.first_name or message.from_user.username or ''
+    chat_name = chat_name.replace('/', '⁄')
+    user_name = user_name.replace('/', '⁄')
 
     caption = message.caption or ''
 
     logname = f'logs/[{chat_name}] [{private_or_chat}] [{message.chat.type}] [{message.chat.id}].log'.replace('[private] [private]', '[private]').replace('[chat] [supergroup]', '[chat]')
-    logname = logname.replace('/', '⁄')
 
     topic_id = 0
 
@@ -142,7 +144,6 @@ def log_report(bot: telebot.TeleBot, message: telebot.types.Message,
     ftime_now = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
 
     logname = f'logs/{user_id}.log'
-    logname = logname.replace('/', '⁄')
 
     log_file_path = logname
 
