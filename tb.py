@@ -857,7 +857,7 @@ def google_thread(message: telebot.types.Message):
             my_log.log_echo(message, r)
 
             # сохранить в отчет вопрос и ответ для юзера, и там же сохранение в группу
-            my_log.log_report(bot, message, chat_id_full, message.from_user.id, q, r)
+            my_log.log_report(bot, message, chat_id_full, message.from_user.id, '/google ' + q, r)
 
             if chat_id_full not in DIALOGS_DB:
                 DIALOGS_DB[chat_id_full] = []
