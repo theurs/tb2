@@ -1017,7 +1017,7 @@ def summ_text_thread(message: telebot.types.Message):
                             my_log.log_echo(message, res)
 
                             # сохранить в отчет вопрос и ответ для юзера, и там же сохранение в группу
-                            my_log.log_report(bot, message, chat_id_full, message.from_user.id, url, res)
+                            my_log.log_report(bot, message, chat_id_full, message.from_user.id, '/sum ' + url, res)
 
                             SUM_CACHE[url] = res
                             if chat_id_full not in DIALOGS_DB:
