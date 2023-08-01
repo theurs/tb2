@@ -1,0 +1,15 @@
+cfg.py
+sync
+__pycache__
+.venv
+db/*
+logs/*
+private/*
+cookies.json
+*.pkl
+*.log
+*.json
+test.py
+.google-cookie
+tb_lite.py
+

@@ -1,0 +1,26 @@
+bardapi
+chardet
+duckduckgo_search
+edge_tts
+fake_useragent
+fuzzywuzzy
+google
+langdetect
+openai
+openpyxl
+pandas
+pyenchant
+python-magic
+# python-magic-bin
+py_trans
+# pylibmagic
+pylatexenc
+PyPDF2
+python-Levenshtein
+telebot
+SpeechRecognition
+# python -m textblob.download_corpora
+textblob
+trafilatura
+youtube_transcript_api
+attrs==23.1.0
