@@ -575,15 +575,17 @@ def deactivate(message: telebot.types.Message):
 @bot.message_handler(commands=['add']) 
 def stop_word_add(message: telebot.types.Message):
     """добавить стоп слово"""
+    global STOP_WORDS
     if is_admin_member(message):
-        global STOP_WORDS
-        word = message.text.split(maxsplit=1)[1].strip()
         with stop_words_lock:
+            word = message.text.split(maxsplit=1)[1].strip()
             STOP_WORDS.append(word)
             STOP_WORDS = list(set(STOP_WORDS))
+            STOP_WORDS = [x.lower() for x in STOP_WORDS]
+            STOP_WORDS = sorted(STOP_WORDS)
             with open('stop_words.txt', 'w', encoding='utf-8') as f:
                 f.write(','.join(STOP_WORDS))
-        bot.reply_to(message, f'Добавлено стоп слово {word}')
+            bot.reply_to(message, f'Добавлено стоп слово {word}')
     else:
         bot.reply_to(message, 'Эта команда только для администраторов')
 
@@ -597,6 +599,8 @@ def stop_word_del(message: telebot.types.Message):
         with stop_words_lock:
             STOP_WORDS = [x for x in STOP_WORDS if x != word]
             STOP_WORDS = list(set(STOP_WORDS))
+            STOP_WORDS = [x.lower() for x in STOP_WORDS]
+            STOP_WORDS = sorted(STOP_WORDS)
             with open('stop_words.txt', 'w', encoding='utf-8') as f:
                 f.write(','.join(STOP_WORDS))
         bot.reply_to(message, f'Удалено стоп слово {word}')
