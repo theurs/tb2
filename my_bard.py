@@ -42,7 +42,10 @@ def get_new_session():
     Returns:
         Bard: An instance of the Bard class representing the new session.
     """
-    proxies = None
+    try:
+        proxies = cfg.proxies
+    except:
+        proxies = None
 
     session = requests.Session()
 
