@@ -1253,7 +1253,7 @@ def do_task(message, custom_prompt: str = ''):
             if x in STOP_WORDS:
                 # сообщить администратору о нарушителе
                 send_message_to_admin(message)
-                return
+                #return
 
         # если сообщение начинается на 'забудь' то стираем историю общения GPT
         if msg.startswith('забудь'):
