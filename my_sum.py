@@ -94,23 +94,13 @@ BEGIN:
 
     result = ''
 
-    if len(prompt) < 15000:
-        try:
-            r = gpt_basic.ai(prompt)
-            if r:
-                result = f'{r}\n\n--\nchatGPT-3.5-turbo-16k [{len(prompt)} символов]'
-        except Exception as error:
-            print(error)
-            my_log.log2(f'my_sum:summ_text_worker: {error}')
-
-    if not result:
-        try:
-            r = gpt_basic.ai(prompt[:32000], model_to_use = 'gpt-4-32k')
-            if r:
-                result = f'{r}\n\n--\nchatGPT-4-32k [{len(prompt[:32000])} символов]'
-        except Exception as error:
-            print(f'my_sum:summ_text_worker: {error}')
-            my_log.log2(f'my_sum:summ_text_worker: {error}')
+    try:
+        r = gpt_basic.ai(prompt[:15000])
+        if r:
+            result = f'{r}\n\n--\nchatGPT-3.5-turbo-16k [{len(prompt)} символов]'
+    except Exception as error:
+        print(error)
+        my_log.log2(f'my_sum:summ_text_worker: {error}')
 
     return result
 
