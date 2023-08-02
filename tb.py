@@ -1236,18 +1236,17 @@ def do_task(message, custom_prompt: str = ''):
             message.text = message.text.split(maxsplit = 1)[1]
             msg = message.text.lower()
 
-        # если есть частичное совпадение в списке стоп слов
-        if msg in STOP_WORDS:
-            # удаляем все символы кроме букв
-            letters = re.compile('[^а-яА-ЯёЁa-zA-Z\s]')
-            msg2 = letters.sub(' ', msg)
-            # и разбиваем текст на слова
-            words_in_msg2 = [x.strip() for x in msg2.split()]
-            for x in words_in_msg2:
-                if x in STOP_WORDS:
-                    # сообщить администратору о нарушителе
-                    send_message_to_admin(message)
-                    return
+        # если есть совпадение в списке стоп слов
+        # удаляем все символы кроме букв
+        letters = re.compile('[^а-яА-ЯёЁa-zA-Z\s]')
+        msg2 = letters.sub(' ', msg)
+        # и разбиваем текст на слова
+        words_in_msg2 = [x.strip() for x in msg2.split()]
+        for x in words_in_msg2:
+            if x in STOP_WORDS:
+                # сообщить администратору о нарушителе
+                send_message_to_admin(message)
+                return
         
         # если сообщение начинается на 'забудь' то стираем историю общения GPT
         if msg.startswith('забудь'):
