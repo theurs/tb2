@@ -16,6 +16,7 @@ py_trans
 # pylibmagic
 pylatexenc
 PyPDF2
+PySocks
 python-Levenshtein
 telebot
 SpeechRecognition
