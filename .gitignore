@@ -13,3 +13,4 @@ test.py
 .google-cookie
 tb_lite.py
 *.xlsx
+stop_words.txt
