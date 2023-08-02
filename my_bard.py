@@ -363,4 +363,4 @@ def clear_voice_message_text(text: str) -> str:
 
 
 if __name__ == "__main__":
-    pass
+    print(chat('hi', '0'))
