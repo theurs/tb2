@@ -1147,7 +1147,7 @@ def send_message_to_admin(message: telebot.types.Message):
     chat_id = cfg.report_id[0]
     thread_id = cfg.report_id[1]
 
-    my_log.log2(str(message))
+    # my_log.log2(str(message))
 
     if message.is_topic_message:
         message_link = f't.me/c/{str(message.chat.id)[3:]}/{message.reply_to_message.message_id}/{message.message_id}'
