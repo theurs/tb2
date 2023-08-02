@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 
 
-import chardet
 import io
-import magic
 import os
-import PyPDF2
 import re
-import requests
 import sys
-import trafilatura
-from langdetect import detect
 from urllib.parse import urlparse
+
+import chardet
+import magic
+import PyPDF2
+import requests
+import trafilatura
 from youtube_transcript_api import YouTubeTranscriptApi
 
 import cfg
@@ -29,13 +29,9 @@ def get_text_from_youtube(url: str) -> str:
         str: первые субтитры из списка какие есть в видео
     """
     top_langs = ('ru', 'en', 'uk', 'es', 'pt', 'fr', 'ar', 'id', 'it', 'de', 'ja', 'ko', 'pl', 'th', 'tr', 'nl', 'hi', 'vi', 'sv', 'ro')
-
     video_id = re.search(r"(?:v=|\/)([a-zA-Z0-9_-]{11})(?:\?|&|\/|$)", url).group(1)
-
     t = YouTubeTranscriptApi.get_transcript(video_id, languages=top_langs)
-
     text = '\n'.join([x['text'] for x in t])
-
     return text or ''
 
 
@@ -48,7 +44,7 @@ def summ_text_worker(text: str, subj: str = 'text') -> str:
 
     # если запустили из pool.map и передали параметры как список
     if isinstance(text, tuple):
-        text, subj, cont = text[0], text[1], text[2]
+        text, subj, _ = text[0], text[1], text[2]
 
     if subj == 'text' or subj == 'pdf':
         prompt = f"""Summarize the following, briefly answer in Russian with easy-to-read formatting:
@@ -57,12 +53,6 @@ def summ_text_worker(text: str, subj: str = 'text') -> str:
 -------------
 BEGIN:
 """
-        prompt_ru = f"""Обобщите следующее, кратко ответьте на русском языке с удобным для чтения форматированием:
--------------
-{text}
--------------
-НАЧИНАЙТЕ:
-"""
     elif subj == 'chat_log':
         prompt = f"""Summarize the following telegram chat log, briefly answer in Russian with easy-to-read formatting:
 -------------
@@ -70,34 +60,22 @@ BEGIN:
 -------------
 BEGIN:
 """
-        prompt_ru = f"""Обобщите следующий лог телеграмм чата, кратко ответьте на русском языке с удобным для чтения форматированием:
--------------
-{text}
--------------
-НАЧИНАЙТЕ:
-"""
     elif subj == 'youtube_video':
         prompt = f"""Summarize the following video subtitles extracted from youtube, briefly answer in Russian with easy-to-read formatting:
 -------------
 {text}
 -------------
 """
-        prompt_ru = f"""Обобщите следующие видео субтитры, извлеченные из youtube, кратко ответьте на русском языке с удобным для чтения форматированием:
--------------
-{text}
--------------
-НАЧИНАЙТЕ:
 
-"""
-
-    if type(text) != str or len(text) < 1: return ''
+    if not isinstance(text, str) or len(text) < 1:
+        return ''
 
     result = ''
 
     try:
-        r = gpt_basic.ai(prompt[:cfg.max_request])
-        if r:
-            result = f'{r}\n\n--\nchatGPT-3.5-turbo-16k [{len(prompt[:cfg.max_request])} символов]'
+        response = gpt_basic.ai(prompt[:cfg.max_request])
+        if response:
+            result = f'{response}\n\n--\nchatGPT-3.5-turbo-16k [{len(prompt[:cfg.max_request])} символов]'
     except Exception as error:
         print(error)
         my_log.log2(f'my_sum:summ_text_worker: {error}')
@@ -156,12 +134,12 @@ def summ_url(url:str) -> str:
    
     #return text
     if youtube:
-        r = summ_text(text, 'youtube_video')
+        result = summ_text(text, 'youtube_video')
     elif pdf:
-        r = summ_text(text, 'pdf')
+        result = summ_text(text, 'pdf')
     else:
-        r = summ_text(text, 'text')
-    return r
+        result = summ_text(text, 'text')
+    return result
 
 
 def is_valid_url(url: str) -> bool:
@@ -178,7 +156,16 @@ if __name__ == "__main__":
     """Usage ./summarize.py '|URL|filename"""
     
    
-    r = summ_url('https://habr.com/ru/articles/748266/')
-    print(r)
-    sys.exit(0)
+    # r = summ_url('https://habr.com/ru/articles/748266/')
+    # print(r)
+    # sys.exit(0)
+    
+    target = sys.argv[1]
+
+    if is_valid_url(target):
+        print(summ_url(target))
+    elif os.path.exists(target):
+        print(summ_text(open(target).read()))
+    else:
+        print("""Usage ./summarize.py '|URL|filename""")
     
