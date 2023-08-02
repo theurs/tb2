@@ -616,12 +616,9 @@ def restart(message: telebot.types.Message):
 @bot.message_handler(commands=['id']) 
 def id_cmd_handler(message: telebot.types.Message):
     """показывает id юзера и группы в которой сообщение отправлено"""
-    if is_admin_member(message):
-        user_id = message.from_user.id
-        chat_id_full = get_topic_id(message)
-        bot.reply_to(message, f'ID пользователя: {user_id}\n\nID группы: {chat_id_full}')
-    else:
-        bot.reply_to(message, 'Эта команда только для администраторов')
+    user_id = message.from_user.id
+    chat_id_full = get_topic_id(message)
+    bot.reply_to(message, f'ID пользователя: {user_id}\n\nID группы: {chat_id_full}')
 
 
 @bot.message_handler(commands=['export']) 
