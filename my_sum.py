@@ -97,7 +97,7 @@ BEGIN:
     try:
         r = gpt_basic.ai(prompt[:15000])
         if r:
-            result = f'{r}\n\n--\nchatGPT-3.5-turbo-16k [{len(prompt)} символов]'
+            result = f'{r}\n\n--\nchatGPT-3.5-turbo-16k [{len(prompt[:15000])} символов]'
     except Exception as error:
         print(error)
         my_log.log2(f'my_sum:summ_text_worker: {error}')
