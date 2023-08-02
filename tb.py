@@ -62,7 +62,14 @@ SUPER_CHAT = my_dic.PersistentDict('db/super_chat.pkl')
 GPT_CHAT_LOCKS = {}
 
 # список стоп-слов
-STOP_WORDS = [x.strip() for x in open('stop_words.txt', 'r', encoding="utf-8").read().split(',')]
+try:
+    STOP_WORDS = [x.strip().lower() for x in open('stop_words.txt', 'r', encoding="utf-8").read().split(',')]
+except FileNotFoundError:
+    STOP_WORDS = []
+STOP_WORDS = [x.lower() for x in STOP_WORDS]
+STOP_WORDS = sorted(STOP_WORDS)
+with open('stop_words.txt', 'w', encoding='utf-8') as f:
+    f.write(','.join(STOP_WORDS))
 stop_words_lock = threading.Lock()
 
 # защита от спама, временный бан юзера
@@ -1247,7 +1254,7 @@ def do_task(message, custom_prompt: str = ''):
                 # сообщить администратору о нарушителе
                 send_message_to_admin(message)
                 return
-        
+
         # если сообщение начинается на 'забудь' то стираем историю общения GPT
         if msg.startswith('забудь'):
             if chat_id_full in BARD_MODE and BARD_MODE[chat_id_full] == 'on':
