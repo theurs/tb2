@@ -837,7 +837,7 @@ def google_thread(message: telebot.types.Message):
     """
             return
 
-        if test_for_spam('Ж' * 16000, message.from_user.id):
+        if test_for_spam('Ж' * 25000, message.from_user.id):
             bot.reply_to(message, 'Слишком много сообщений, попробуйте позже')
             return
 
@@ -961,6 +961,11 @@ def summ_text_thread(message: telebot.types.Message):
     else:
         lock = threading.Lock()
         GPT_CHAT_LOCKS[chat_id_full] = lock
+
+    if test_for_spam('Ж' * 25000, message.from_user.id):
+        bot.reply_to(message, 'Слишком много сообщений, попробуйте позже')
+        return
+
     with lock:
 
         my_log.log_echo(message)
