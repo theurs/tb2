@@ -63,7 +63,7 @@ GPT_CHAT_LOCKS = {}
 
 # список стоп-слов
 try:
-    STOP_WORDS = [x.strip().lower() for x in open('stop_words.txt', 'r', encoding="utf-8").read().split(',')]
+    STOP_WORDS = [x.strip() for x in open('stop_words.txt', 'r', encoding="utf-8").read().split(',')]
 except FileNotFoundError:
     STOP_WORDS = []
 STOP_WORDS = [x.lower() for x in STOP_WORDS]
