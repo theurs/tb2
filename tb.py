@@ -58,6 +58,9 @@ SUM_CACHE = my_dic.PersistentDict('db/sum_cache.pkl')
 # {chat_id:False|True}
 SUPER_CHAT = my_dic.PersistentDict('db/super_chat.pkl')
 
+# в каких чатах включен Бард вместо чатГПТ
+BARD_MODE = my_dic.PersistentDict('db/bard_mode.pkl')
+
 # хранилище замков что бы юзеры не могли делать новые запросы пока не получен ответ на старый
 # {chat_id(str):threading.Lock(),...}
 GPT_CHAT_LOCKS = {}
@@ -558,6 +561,25 @@ def bard_thread(message: telebot.types.Message):
         except Exception as error3:
             print(f'tb:do_task: {error3}')
             my_log.log2(f'tb:do_task: {error3}')
+
+
+@bot.message_handler(commands=['bardmode'])
+def bardmode(message: telebot.types.Message):
+    """выключить работу в этой теме/чате"""
+    if is_admin_member(message):
+        chat_id_full = get_topic_id(message)
+        if chat_id_full in BARD_MODE:
+            if BARD_MODE[chat_id_full]:
+                BARD_MODE[chat_id_full] = False
+                bot.reply_to(message, 'Теперь бот отвечает как chatGPT в этой теме/чате')
+            else:
+                BARD_MODE[chat_id_full] = True
+                bot.reply_to(message, 'Теперь бот отвечает как Google Bard в этой теме/чате')
+        else:
+            BARD_MODE[chat_id_full] = True
+            bot.reply_to(message, 'Теперь бот отвечает как Google Bard в этой теме/чате')
+    else:
+        bot.reply_to(message, 'Эта команда только для администраторов')
 
 
 @bot.message_handler(commands=['activate']) 
@@ -1113,7 +1135,7 @@ def send_welcome_help(message: telebot.types.Message):
 
 Команды и запросы можно делать голосовыми сообщениями.
 
-""" + '\n'.join(open('commands.txt', encoding='utf8').readlines()) + '\n\n💬 https://t.me/theurs'
+""" + '\n'.join(open('commands.txt', encoding='utf8').readlines())
 
     bot.reply_to(message, help, parse_mode='Markdown')
     my_log.log_echo(message, help)
@@ -1143,7 +1165,7 @@ def reply_to_long_message(message: telebot.types.Message, resp: str, parse_mode:
         bot.send_document(message.chat.id, document=buf, caption='resp.txt', visible_file_name = 'resp.txt')
 
 
-def send_message_to_admin(message: telebot.types.Message):
+def send_message_to_admin(message: telebot.types.Message, bad_word_found: str):
     # Отправка ссылки на сообщение администратору
     chat_id = cfg.report_id[0]
     thread_id = cfg.report_id[1]
@@ -1156,7 +1178,7 @@ def send_message_to_admin(message: telebot.types.Message):
         message_link = f't.me/{message.chat.username}/{message.message_id}'
 
     bot.send_message(chat_id=chat_id, message_thread_id = thread_id, 
-                     text=f"Посмотрите сообщение здесь, возможно маты: {message_link}",
+                     text=f"Посмотрите сообщение здесь, возможно маты ({bad_word_found}): {message_link}",
                      disable_web_page_preview = True)
 
 
@@ -1251,24 +1273,24 @@ def do_task(message, custom_prompt: str = ''):
         # и разбиваем текст на слова
         words_in_msg2 = [x.strip() for x in msg2.split()]
         for x in words_in_msg2:
-            if any(fuzz.ratio(x, keyword) > 70 for keyword in STOP_WORDS):
+            if any(fuzz.ratio(x, keyword) > 80 for keyword in STOP_WORDS):
                 # сообщить администратору о нарушителе
-                send_message_to_admin(message)
-                #return
+                send_message_to_admin(message, x)
         # for x in words_in_msg2:
             # if x in STOP_WORDS:
                 # # сообщить администратору о нарушителе
-                # send_message_to_admin(message)
-                # #return
+                # send_message_to_admin(message, x)
 
         # если сообщение начинается на 'забудь' то стираем историю общения GPT
         if msg.startswith('забудь'):
-            if chat_id_full in BARD_MODE and BARD_MODE[chat_id_full] == 'on':
+            if chat_id_full in BARD_MODE and BARD_MODE[chat_id_full]:
                 my_bard.reset_bard_chat(chat_id_full)
-                my_log.log_echo(message, 'История барда принудительно отчищена')
+                my_log.log_echo(message, 'История Google Bard принудительно отчищена')
+                my_log.log_report(bot, message, chat_id_full, user_id, 'забудь', 'История Google Bard принудительно отчищена')
             else:
                 DIALOGS_DB[chat_id_full] = []
                 my_log.log_echo(message, 'История chatGPT принудительно отчищена')
+                my_log.log_report(bot, message, chat_id_full, user_id, 'забудь', 'История chatGPT принудительно отчищена')
             bot.reply_to(message, 'Ок', parse_mode='Markdown')
             return
 
@@ -1311,44 +1333,76 @@ def do_task(message, custom_prompt: str = ''):
             my_log.log_echo(message, f'Слишком длинное сообщение чат-для бота: {len(msg)} из {cfg.max_message_from_user}')
             return
 
-        # добавляем новый запрос пользователя в историю диалога пользователя
-        with ShowAction(message, 'typing'):
-
-            # проверка на спам сообщениями
-            if test_for_spam(message.text + get_history_of_chat(chat_id_full), user_id):
-                bot.reply_to(message, f'Слишком много сообщений, попробуйте попозже')
+        # если активирован бард
+        if chat_id_full in BARD_MODE and BARD_MODE[chat_id_full]:
+            if len(msg) > my_bard.MAX_REQUEST:
+                bot.reply_to(message, f'Слишком длинное сообщение для барда: {len(msg)} из {my_bard.MAX_REQUEST}')
+                my_log.log_echo(message, f'Слишком длинное сообщение для барда: {len(msg)} из {my_bard.MAX_REQUEST}')
                 return
 
-            if chat_id_full in GPT_CHAT_LOCKS:
-                lock = GPT_CHAT_LOCKS[chat_id_full]
-            else:
-                lock = threading.Lock()
-                GPT_CHAT_LOCKS[chat_id_full] = lock
-            with lock:
-                resp = dialog_add_user_request(chat_id_full, message.text, 'gpt')
-                if resp:
-                    
-                    # добавляем ответ счетчик юзера что бы детектить спам
-                    test_for_spam(resp, user_id)
-                    
-                    my_log.log_echo(message, resp, debug = True)
-                    resp = utils.bot_markdown_to_html(resp)
-                    my_log.log_echo(message, resp)
+            with ShowAction(message, 'typing'):
+                try:
+                    answer = my_bard.chat(message.text, chat_id_full)
+                    my_log.log_echo(message, answer, debug = True)
+                    answer = utils.bot_markdown_to_html(answer)
+                    my_log.log_echo(message, answer)
+                    if answer:
+                        try:
+                            reply_to_long_message(message, answer, parse_mode='HTML', disable_web_page_preview = True, 
+                                                    reply_markup=get_keyboard('chat', message))
+                        except Exception as error:
+                            print(f'tb:do_task: {error}')
+                            my_log.log2(f'tb:do_task: {error}')
+                            reply_to_long_message(message, answer, parse_mode='', disable_web_page_preview = True, 
+                                                    reply_markup=get_keyboard('chat', message))
+                        my_log.log_report(bot, message, chat_id_full, user_id, user_text, answer, parse_mode='HTML')
+                    else:
+                        my_log.log_echo(message, resp, debug = True)
+                        my_log.log_report(bot, message, chat_id_full, user_id, user_text, 'Google Bard не ответил', parse_mode='HTML')
+                        bot.reply_to(message, 'Google Bard не ответил')
+                except Exception as error3:
+                    print(f'tb:do_task: {error3}')
+                    my_log.log2(f'tb:do_task: {error3}')
+        else:
+            # chatGPT, добавляем новый запрос пользователя в историю диалога пользователя
+            with ShowAction(message, 'typing'):
 
-                    # сохранить в отчет вопрос и ответ для юзера, и там же сохранение в группу
-                    my_log.log_report(bot, message, chat_id_full, user_id, user_text, resp, parse_mode='HTML')
+                # проверка на спам сообщениями
+                if test_for_spam(message.text + get_history_of_chat(chat_id_full), user_id):
+                    bot.reply_to(message, f'Слишком много сообщений, попробуйте попозже')
+                    return
 
-                    try:
-                        reply_to_long_message(message, resp, parse_mode='HTML', disable_web_page_preview = True, 
-                                            reply_markup=get_keyboard('chat', message))
-                    except Exception as error2:    
-                        print(error2)
-                        my_log.log2(resp)
-                        reply_to_long_message(message, resp, parse_mode='', disable_web_page_preview = True, 
-                                            reply_markup=get_keyboard('chat', message))
+                if chat_id_full in GPT_CHAT_LOCKS:
+                    lock = GPT_CHAT_LOCKS[chat_id_full]
                 else:
-                    my_log.log_echo(message, resp, debug = True)
-                    bot.reply_to(message, 'ChatGPT не ответил')
+                    lock = threading.Lock()
+                    GPT_CHAT_LOCKS[chat_id_full] = lock
+                with lock:
+                    resp = dialog_add_user_request(chat_id_full, message.text, 'gpt')
+                    if resp:
+                        
+                        # добавляем ответ счетчик юзера что бы детектить спам
+                        test_for_spam(resp, user_id)
+                        
+                        my_log.log_echo(message, resp, debug = True)
+                        resp = utils.bot_markdown_to_html(resp)
+                        my_log.log_echo(message, resp)
+
+                        # сохранить в отчет вопрос и ответ для юзера, и там же сохранение в группу
+                        my_log.log_report(bot, message, chat_id_full, user_id, user_text, resp, parse_mode='HTML')
+
+                        try:
+                            reply_to_long_message(message, resp, parse_mode='HTML', disable_web_page_preview = True, 
+                                                reply_markup=get_keyboard('chat', message))
+                        except Exception as error2:    
+                            print(error2)
+                            my_log.log2(resp)
+                            reply_to_long_message(message, resp, parse_mode='', disable_web_page_preview = True, 
+                                                reply_markup=get_keyboard('chat', message))
+                    else:
+                        my_log.log_echo(message, resp, debug = True)
+                        my_log.log_report(bot, message, chat_id_full, user_id, user_text, 'ChatGPT не ответил', parse_mode='HTML')
+                        bot.reply_to(message, 'ChatGPT не ответил')
 
 
 def set_default_commands():
