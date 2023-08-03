@@ -10,6 +10,7 @@ import time
 
 import openai
 import telebot
+from fuzzywuzzy import fuzz
 import pandas as pd
 
 import cfg
@@ -1250,10 +1251,15 @@ def do_task(message, custom_prompt: str = ''):
         # и разбиваем текст на слова
         words_in_msg2 = [x.strip() for x in msg2.split()]
         for x in words_in_msg2:
-            if x in STOP_WORDS:
+            if any(fuzz.ratio(x, keyword) > 70 for keyword in STOP_WORDS):
                 # сообщить администратору о нарушителе
                 send_message_to_admin(message)
                 #return
+        # for x in words_in_msg2:
+            # if x in STOP_WORDS:
+                # # сообщить администратору о нарушителе
+                # send_message_to_admin(message)
+                # #return
 
         # если сообщение начинается на 'забудь' то стираем историю общения GPT
         if msg.startswith('забудь'):
