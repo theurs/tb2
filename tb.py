@@ -361,18 +361,10 @@ def get_keyboard(kbd: str, message: telebot.types.Message, flag: str = '') -> te
     # chat_id_full = get_topic_id(message)
 
     if kbd == 'chat':
-        markup  = telebot.types.InlineKeyboardMarkup(row_width=2)
-        button1 = telebot.types.InlineKeyboardButton("Озвучить", callback_data='tts')
-        button2 = telebot.types.InlineKeyboardButton("Перевод на русский", callback_data='translate')
-        button3 = telebot.types.InlineKeyboardButton("Забудь всё", callback_data='forget_all')
-        markup.add(button1, button3, button2)
-        return markup
-    elif kbd == 'chat_bard':
-        markup  = telebot.types.InlineKeyboardMarkup(row_width=2)
-        button1 = telebot.types.InlineKeyboardButton("Озвучить", callback_data='tts')
-        button2 = telebot.types.InlineKeyboardButton("Перевод на русский", callback_data='translate')
-        button3 = telebot.types.InlineKeyboardButton("Забудь всё", callback_data='forget_all_bard')
-        markup.add(button1, button3, button2)
+        markup  = telebot.types.InlineKeyboardMarkup(row_width=1)
+        button1 = telebot.types.InlineKeyboardButton("Произнеси", callback_data='tts')
+        button2 = telebot.types.InlineKeyboardButton("Повтори, загуглив", callback_data='google')
+        markup.add(button1, button2)
         return markup
     elif kbd == 'translate':
         markup  = telebot.types.InlineKeyboardMarkup()
@@ -422,6 +414,10 @@ def callback_inline_thread(call: telebot.types.CallbackQuery):
                 lang = my_trans.detect_lang(message.text) or 'ru'
                 message.text = f'/tts {lang} {message.text}'
                 tts(message)
+            elif call.data == 'google':
+                message = message.reply_to_message
+                message.text = 'гугл ' + text
+                echo_all(message)
             elif call.data == 'translate':
                 # реакция на клавиатуру для кнопки перевести текст
                 text = message.text
@@ -552,12 +548,12 @@ def bard_thread(message: telebot.types.Message):
 
                 try:
                     reply_to_long_message(message, answer, parse_mode='HTML', disable_web_page_preview = True, 
-                                            reply_markup=get_keyboard('chat_bard', message))
+                                            reply_markup=get_keyboard('chat', message))
                 except Exception as bard_error:
                     print(f'tb:do_task: {bard_error}')
                     my_log.log2(f'tb:do_task: {bard_error}')
                     reply_to_long_message(message, answer, parse_mode='', disable_web_page_preview = True, 
-                                            reply_markup=get_keyboard('chat_bard', message))
+                                            reply_markup=get_keyboard('chat', message))
         except Exception as error3:
             print(f'tb:do_task: {error3}')
             my_log.log2(f'tb:do_task: {error3}')
