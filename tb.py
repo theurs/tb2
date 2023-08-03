@@ -415,7 +415,7 @@ def callback_inline_thread(call: telebot.types.CallbackQuery):
                 message.text = f'/tts {lang} {message.text}'
                 tts(message)
             elif call.data == 'google':
-                message = message.reply_to_message
+                message.text = message.reply_to_message.text
                 message.text = 'гугл ' + message.text
                 echo_all(message)
             elif call.data == 'translate':
