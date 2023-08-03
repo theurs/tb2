@@ -75,7 +75,7 @@ BEGIN:
     try:
         response = gpt_basic.ai(prompt[:cfg.max_request])
         if response:
-            result = f'{response}\n\n--\nchatGPT-3.5-turbo-16k [{len(prompt[:cfg.max_request])} символов]'
+            result = f'{response}\n\n{len(prompt[:cfg.max_request])} символов'
     except Exception as error:
         print(error)
         my_log.log2(f'my_sum:summ_text_worker: {error}')

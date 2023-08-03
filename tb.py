@@ -893,7 +893,7 @@ def google_thread(message: telebot.types.Message):
                                     ]
 
 
-@bot.message_handler(commands=['image','img'])
+# @bot.message_handler(commands=['image','img'])
 # def image(message: telebot.types.Message):
 #     thread = threading.Thread(target=image_thread, args=(message,))
 #     thread.start()
