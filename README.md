@@ -123,6 +123,12 @@ bard_commands = ['бард', 'bard']
 # ограничитель для защиты от быстрого исчерпания токенов chatGPT
 spam_limit = 200
 
+# для гугл барда
+# cfg.proxies = {
+#     "http": "socks5://x.x.x.x:1080",
+#     "https": "socks5://x.x.x.x:1080"
+# }
+cfg.proxies = None
 
 ```
 
