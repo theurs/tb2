@@ -1246,7 +1246,7 @@ def do_task(message, custom_prompt: str = ''):
 
         # если есть совпадение в списке стоп слов
         # удаляем все символы кроме букв
-        letters = re.compile('[^а-яА-ЯёЁa-zA-Z\s]')
+        letters = re.compile('[^а-яА-ЯёЁa-zA-Z0-9\'\`\$\_\-\{\}\[\]\<\>\@\*\|\s]')
         msg2 = letters.sub(' ', msg)
         # и разбиваем текст на слова
         words_in_msg2 = [x.strip() for x in msg2.split()]
