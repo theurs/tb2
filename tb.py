@@ -416,7 +416,7 @@ def callback_inline_thread(call: telebot.types.CallbackQuery):
                 tts(message)
             elif call.data == 'google':
                 message = message.reply_to_message
-                message.text = 'гугл ' + text
+                message.text = 'гугл ' + message.text
                 echo_all(message)
             elif call.data == 'translate':
                 # реакция на клавиатуру для кнопки перевести текст
