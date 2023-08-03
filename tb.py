@@ -857,13 +857,11 @@ def google_thread(message: telebot.types.Message):
             print(error2)
             help = """/google текст запроса
 
-    Будет делать запрос в гугл, и потом пытаться найти нужный ответ в результатах
+Будет делать запрос в гугл, и потом пытаться найти нужный ответ в результатах
 
-    /google курс биткоина, прогноз на ближайшее время
-
-    /google текст песни малиновая лада
-
-    /google кто звонил +69997778888, из какой страны
+/google курс биткоина, прогноз на ближайшее время
+/google текст песни малиновая лада
+/google кто звонил +69997778888, из какой страны
     """
             return
 
@@ -1161,7 +1159,7 @@ def reply_to_long_message(message: telebot.types.Message, resp: str, parse_mode:
         bot.send_document(message.chat.id, document=buf, caption='resp.txt', visible_file_name = 'resp.txt')
 
 
-def send_message_to_admin(message: telebot.types.Message, bad_word_found: str):
+def send_message_to_admin(message: telebot.types.Message, bad_word_found: str, stop_words):
     # Отправка ссылки на сообщение администратору
     chat_id = cfg.report_id[0]
     thread_id = cfg.report_id[1]
@@ -1174,7 +1172,7 @@ def send_message_to_admin(message: telebot.types.Message, bad_word_found: str):
         message_link = f't.me/{message.chat.username}/{message.message_id}'
 
     bot.send_message(chat_id=chat_id, message_thread_id = thread_id, 
-                     text=f"Посмотрите сообщение здесь, возможно маты ({bad_word_found}): {message_link}",
+                     text=f"Посмотрите сообщение здесь, возможно маты ({bad_word_found} -> {str(stop_words)}): {message_link}",
                      disable_web_page_preview = True)
 
 
@@ -1271,11 +1269,11 @@ def do_task(message, custom_prompt: str = ''):
         for x in words_in_msg2:
             if any(fuzz.ratio(x, keyword) > 80 for keyword in STOP_WORDS):
                 # сообщить администратору о нарушителе
-                send_message_to_admin(message, x)
+                send_message_to_admin(message, x, [fuzz.ratio(x, keyword) > 80 for keyword in STOP_WORDS])
         # for x in words_in_msg2:
             # if x in STOP_WORDS:
                 # # сообщить администратору о нарушителе
-                # send_message_to_admin(message, x)
+                # send_message_to_admin(message, x, [fuzz.ratio(x, keyword) > 80 for keyword in STOP_WORDS])
 
         # если сообщение начинается на 'забудь' то стираем историю общения GPT
         if msg.startswith('забудь'):
