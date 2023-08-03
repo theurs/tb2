@@ -366,12 +366,12 @@ def get_keyboard(kbd: str, message: telebot.types.Message, flag: str = '') -> te
         button2 = telebot.types.InlineKeyboardButton("Повтори, загуглив", callback_data='google')
         markup.add(button1, button2)
         return markup
-    elif kbd == 'translate':
-        markup  = telebot.types.InlineKeyboardMarkup()
-        button2 = telebot.types.InlineKeyboardButton("Озвучить", callback_data='tts')
-        button3 = telebot.types.InlineKeyboardButton("Перевод на русский", callback_data='translate')
-        markup.add(button2, button3)
-        return markup
+    # elif kbd == 'translate':
+    #     markup  = telebot.types.InlineKeyboardMarkup()
+    #     button2 = telebot.types.InlineKeyboardButton("Озвучить", callback_data='tts')
+    #     button3 = telebot.types.InlineKeyboardButton("Перевод на русский", callback_data='translate')
+    #     markup.add(button2, button3)
+    #     return markup
     else:
         raise f"Неизвестная клавиатура '{kbd}'"
 
@@ -415,15 +415,15 @@ def callback_inline_thread(call: telebot.types.CallbackQuery):
                 message.text = f'/tts {lang} {message.text}'
                 tts(message)
             elif call.data == 'google':
-                message.text = message.reply_to_message.text
-                message.text = 'гугл ' + message.text
-                echo_all(message)
-            elif call.data == 'translate':
-                # реакция на клавиатуру для кнопки перевести текст
-                text = message.text
-                translated = my_trans.translate(text, 'ru')
-                reply_to_long_message(message, translated, disable_web_page_preview=True)
-                my_log.log_report(bot, message.reply_to_message, chat_id_full, user_id, 'переведи на русский', translated)
+                message = message.reply_to_message
+                message.text = '/google ' + message.text
+                google(message)
+            # elif call.data == 'translate':
+            #     # реакция на клавиатуру для кнопки перевести текст
+            #     text = message.text
+            #     translated = my_trans.translate(text, 'ru')
+            #     reply_to_long_message(message, translated, disable_web_page_preview=True)
+            #     my_log.log_report(bot, message.reply_to_message, chat_id_full, user_id, 'переведи на русский', translated)
 
 
 @bot.message_handler(content_types = ['voice', 'audio'])
@@ -876,11 +876,11 @@ def google_thread(message: telebot.types.Message):
                 r = my_google.search(q)
             try:
                 r = utils.bot_markdown_to_html(r)
-                bot.reply_to(message, r, parse_mode = 'HTML', disable_web_page_preview = True, reply_markup=get_keyboard('translate', message))
+                bot.reply_to(message, r, parse_mode = 'HTML', disable_web_page_preview = True, reply_markup=get_keyboard('chat', message))
             except Exception as error2:
                 print(f'tb:google: {error2}')
                 my_log.log2(f'tb:google: {error2}')
-                bot.reply_to(message, r, parse_mode = '', disable_web_page_preview = True, reply_markup=get_keyboard('translate', message))
+                bot.reply_to(message, r, parse_mode = '', disable_web_page_preview = True, reply_markup=get_keyboard('chat', message))
             my_log.log_echo(message, r)
 
             # сохранить в отчет вопрос и ответ для юзера, и там же сохранение в группу
