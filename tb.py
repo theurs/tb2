@@ -1269,7 +1269,7 @@ def do_task(message, custom_prompt: str = ''):
         for x in words_in_msg2:
             if any(fuzz.ratio(x, keyword) > 80 for keyword in STOP_WORDS):
                 # сообщить администратору о нарушителе
-                send_message_to_admin(message, x, [fuzz.ratio(x, keyword) > 80 for keyword in STOP_WORDS])
+                send_message_to_admin(message, x, [keyword for keyword in STOP_WORDS if fuzz.ratio(x, keyword) > 80])
         # for x in words_in_msg2:
             # if x in STOP_WORDS:
                 # # сообщить администратору о нарушителе
