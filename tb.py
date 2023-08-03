@@ -358,7 +358,6 @@ def get_keyboard(kbd: str, message: telebot.types.Message, flag: str = '') -> te
     'hide' - клавиатура с одной кнопкой Скрой
     ...
     """
-    # chat_id_full = get_topic_id(message)
 
     if kbd == 'chat':
         markup  = telebot.types.InlineKeyboardMarkup(row_width=1)
@@ -366,12 +365,6 @@ def get_keyboard(kbd: str, message: telebot.types.Message, flag: str = '') -> te
         button2 = telebot.types.InlineKeyboardButton("Повтори, загуглив", callback_data='google')
         markup.add(button1, button2)
         return markup
-    # elif kbd == 'translate':
-    #     markup  = telebot.types.InlineKeyboardMarkup()
-    #     button2 = telebot.types.InlineKeyboardButton("Озвучить", callback_data='tts')
-    #     button3 = telebot.types.InlineKeyboardButton("Перевод на русский", callback_data='translate')
-    #     markup.add(button2, button3)
-    #     return markup
     else:
         raise f"Неизвестная клавиатура '{kbd}'"
 
@@ -396,21 +389,7 @@ def callback_inline_thread(call: telebot.types.CallbackQuery):
             GPT_CHAT_LOCKS[chat_id_full] = lock
         with lock:
 
-            if call.data == 'continue_gpt':
-                # обработка нажатия кнопки "Продолжай GPT"
-                message.dont_check_topic = True
-                echo_all(message, 'Продолжай')
-            elif call.data == 'forget_all':
-                # обработка нажатия кнопки "Забудь всё"
-                DIALOGS_DB[chat_id_full] = []
-                bot.reply_to(message, 'chatGPT стёр память')
-                my_log.log_report(bot, message.reply_to_message, chat_id_full, user_id, 'Забудь всё', 'chatGPT стёр память')
-            elif call.data == 'forget_all_bard':
-                # обработка нажатия кнопки "Забудь всё"
-                my_bard.reset_bard_chat(chat_id_full)
-                bot.reply_to(message, 'Google bard стёр память')
-                my_log.log_report(bot, message.reply_to_message, chat_id_full, user_id, 'Забудь всё', 'Google bard стёр память')
-            elif call.data == 'tts':
+            if call.data == 'tts':
                 lang = my_trans.detect_lang(message.text) or 'ru'
                 message.text = f'/tts {lang} {message.text}'
                 tts(message)
@@ -418,12 +397,6 @@ def callback_inline_thread(call: telebot.types.CallbackQuery):
                 message = message.reply_to_message
                 message.text = '/google ' + message.text
                 google(message)
-            # elif call.data == 'translate':
-            #     # реакция на клавиатуру для кнопки перевести текст
-            #     text = message.text
-            #     translated = my_trans.translate(text, 'ru')
-            #     reply_to_long_message(message, translated, disable_web_page_preview=True)
-            #     my_log.log_report(bot, message.reply_to_message, chat_id_full, user_id, 'переведи на русский', translated)
 
 
 @bot.message_handler(content_types = ['voice', 'audio'])
@@ -729,6 +702,30 @@ def export_data_thread(message: telebot.types.Message):
             except Exception as error:
                 print(f'tb:export_data_thread: {error}')
                 my_log.log2(f'tb:export_data_thread: {error}')
+
+
+@bot.message_handler(commands=['clear']) 
+def clear(message: telebot.types.Message):
+    thread = threading.Thread(target=clear_thread, args=(message,))
+    thread.start()
+def clear_thread(message: telebot.types.Message):
+    """стирает память боту"""
+
+    # работаем только там где администратор включил
+    if not activated_location(message):
+        return
+
+    chat_id_full = get_topic_id(message)
+    user_id = message.from_user.id
+    if chat_id_full in BARD_MODE and BARD_MODE[chat_id_full]:
+        my_bard.reset_bard_chat(chat_id_full)
+        my_log.log_echo(message, 'История Google Bard принудительно отчищена')
+        my_log.log_report(bot, message, chat_id_full, user_id, 'забудь', 'История Google Bard принудительно отчищена')
+    else:
+        DIALOGS_DB[chat_id_full] = []
+        my_log.log_echo(message, 'История chatGPT принудительно отчищена')
+        my_log.log_report(bot, message, chat_id_full, user_id, 'забудь', 'История chatGPT принудительно отчищена')
+    bot.reply_to(message, 'Ок', parse_mode='Markdown')
 
 
 @bot.message_handler(commands=['tts']) 
@@ -1106,7 +1103,7 @@ def send_welcome_start(message: telebot.types.Message):
 
     my_log.log_echo(message)
 
-    help = """Я - ваш персональный чат-бот, готовый помочь вам в любое время суток. Моя задача - помочь вам получить необходимую информацию и решить возникающие проблемы."""
+    help = """Я - чат-бот, готовый помочь вам в любое время суток. Моя задача - помочь вам получить необходимую информацию и решить возникающие проблемы."""
     bot.reply_to(message, help, parse_mode='Markdown')
     my_log.log_echo(message, help)
 
@@ -1290,15 +1287,7 @@ def do_task(message, custom_prompt: str = ''):
 
         # если сообщение начинается на 'забудь' то стираем историю общения GPT
         if msg.startswith('забудь'):
-            if chat_id_full in BARD_MODE and BARD_MODE[chat_id_full]:
-                my_bard.reset_bard_chat(chat_id_full)
-                my_log.log_echo(message, 'История Google Bard принудительно отчищена')
-                my_log.log_report(bot, message, chat_id_full, user_id, 'забудь', 'История Google Bard принудительно отчищена')
-            else:
-                DIALOGS_DB[chat_id_full] = []
-                my_log.log_echo(message, 'История chatGPT принудительно отчищена')
-                my_log.log_report(bot, message, chat_id_full, user_id, 'забудь', 'История chatGPT принудительно отчищена')
-            bot.reply_to(message, 'Ок', parse_mode='Markdown')
+            clear_thread(message)
             return
 
         # если в сообщении только ссылка тогда суммаризируем текст из неё
