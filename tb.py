@@ -1172,7 +1172,7 @@ def send_message_to_admin(message: telebot.types.Message, bad_word_found: str, s
         message_link = f't.me/{message.chat.username}/{message.message_id}'
 
     bot.send_message(chat_id=chat_id, message_thread_id = thread_id, 
-                     text=f"Посмотрите сообщение здесь, возможно маты (нечеткое совпадение >80% {bad_word_found} -> {str(stop_words)}): {message_link}",
+                     text=f"Посмотрите сообщение здесь, возможно маты (нечеткое совпадение >80% {bad_word_found} -> {str(stop_words[:10])}): {message_link}",
                      disable_web_page_preview = True)
 
 
