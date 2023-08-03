@@ -1172,7 +1172,7 @@ def send_message_to_admin(message: telebot.types.Message, bad_word_found: str, s
         message_link = f't.me/{message.chat.username}/{message.message_id}'
 
     bot.send_message(chat_id=chat_id, message_thread_id = thread_id, 
-                     text=f"Посмотрите сообщение здесь, возможно маты (нечеткое совпадение >80% {bad_word_found} -> {str(stop_words[:10])}): {message_link}",
+                     text=f"Посмотрите сообщение здесь, возможно маты\n\nНечеткое совпадение >90%\n\n{bad_word_found} -> {str(stop_words[:10])}\n\n{message_link}",
                      disable_web_page_preview = True)
 
 
@@ -1269,7 +1269,7 @@ def do_task(message, custom_prompt: str = ''):
         for x in words_in_msg2:
             if any(fuzz.ratio(x, keyword) > 80 for keyword in STOP_WORDS):
                 # сообщить администратору о нарушителе
-                send_message_to_admin(message, x, [keyword for keyword in STOP_WORDS if fuzz.ratio(x, keyword) > 80])
+                send_message_to_admin(message, x, [keyword for keyword in STOP_WORDS if fuzz.ratio(x, keyword) > 90])
         # for x in words_in_msg2:
             # if x in STOP_WORDS:
                 # # сообщить администратору о нарушителе
