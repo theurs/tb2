@@ -130,6 +130,8 @@ spam_limit = 200
 # }
 cfg.proxies = None
 
+# ключи для клауда
+claudeai_keys = ['sessionKey=sk-xxxxxxxxxxxxxxxx',]
 ```
 
 7. Запустить ./tb.py
