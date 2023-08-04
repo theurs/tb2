@@ -78,20 +78,21 @@ BEGIN:
         try:
             response = my_claude.chat(prompt[:my_claude.MAX_QUERY], 'my_summ')
             if response:
-                # to_remove = [
-                #     'Вот краткое резюме видео на русском языке в простом формате:',
-                #     'Вот краткое резюме основных моментов видео на русском языке в удобочитаемом формате:',
-                #     'Вот краткое резюме основных моментов видео на русском языке в простом формате:',
-                #     'Вот краткое резюме на русском языке с удобочитаемым форматированием:',
-                # ]
-                # for i in to_remove:
-                #     response = response.replace(i, '', 1)
-                first_line = response.split('\n', maxsplit=1)[0].lower()
-                if 'краткое резюме' in first_line or 'краткое содержание' in first_line:
-                    response = response.split('\n', maxsplit=1)[1].strip()
-                last_line = response.strip().rsplit('\n', maxsplit=1)[1]
-                if last_line.strip() == 'END' or last_line.strip() == 'END.':
-                    response = response.rsplit('\n', maxsplit=1)[0].strip()
+                to_remove = [
+                    'Вот краткое резюме видео на русском языке в простом формате:',
+                    'Вот краткое резюме основных моментов видео на русском языке в удобочитаемом формате:',
+                    'Вот краткое резюме основных моментов видео на русском языке в простом формате:',
+                    'Вот краткое резюме на русском языке с удобочитаемым форматированием:',
+                ]
+                for i in to_remove:
+                    response = response.replace(i, '', 1)
+                response = response.strip()
+                # first_line = response.split('\n', maxsplit=1)[0].lower()
+                # if 'краткое резюме' in first_line or 'краткое содержание' in first_line:
+                #     response = response.split('\n', maxsplit=1)[1].strip()
+                # last_line = response.strip().rsplit('\n', maxsplit=1)[1]
+                # if last_line.strip() == 'END' or last_line.strip() == 'END.':
+                #     response = response.rsplit('\n', maxsplit=1)[0].strip()
                 result = f'{response}\n\n[Claude Anthropic {len(prompt[:my_claude.MAX_QUERY])} символов]'
         except Exception as error:
             print(error)
