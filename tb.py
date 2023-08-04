@@ -363,8 +363,7 @@ def get_keyboard(kbd: str, message: telebot.types.Message, flag: str = '') -> te
     if kbd == 'chat':
         markup  = telebot.types.InlineKeyboardMarkup(row_width=1)
         button1 = telebot.types.InlineKeyboardButton("Произнеси", callback_data='tts')
-        button2 = telebot.types.InlineKeyboardButton("Повтори, загуглив", callback_data='google')
-        markup.add(button1, button2)
+        markup.add(button1)
         return markup
     else:
         raise f"Неизвестная клавиатура '{kbd}'"

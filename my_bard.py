@@ -156,15 +156,15 @@ def chat_request(query: str, dialog: str, reset = False) -> str:
 
     if len(links) > 6:
         links = links[:6]
-    try:
-        if links:
-            for url in links:
-                if url:
-                    # result += f"\n\n[{url}]({url})"
-                    result += f"\n\n{url}"
-    except Exception as error:
-        print(error)
-        my_log.log2(str(error))
+    # try:
+    #     if links:
+    #         for url in links:
+    #             if url:
+    #                 # result += f"\n\n[{url}]({url})"
+    #                 result += f"\n\n{url}"
+    # except Exception as error:
+    #     print(error)
+    #     my_log.log2(str(error))
 
     # images = response['images']
     # if len(images) > 6:
