@@ -20,6 +20,7 @@ import my_genimg
 import my_dic
 import my_google
 import my_log
+import my_perplexity
 import my_sum
 import my_stt
 import my_trans
@@ -871,7 +872,14 @@ def google_thread(message: telebot.types.Message):
 
         with ShowAction(message, 'typing'):
             with semaphore_talks:
-                r = my_google.search(q)
+                try:
+                    r = my_perplexity.ask(q)
+                except Exception as perror:
+                    print(f'tb:google: {perror}')
+                    my_log.log2(f'tb:google: {perror}')
+                    r = ''
+                if not r:
+                    r = my_google.search(q)
             try:
                 r = utils.bot_markdown_to_html(r)
                 bot.reply_to(message, r, parse_mode = 'HTML', disable_web_page_preview = True, reply_markup=get_keyboard('chat', message))
