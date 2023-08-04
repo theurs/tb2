@@ -59,8 +59,8 @@ SUM_CACHE = my_dic.PersistentDict('db/sum_cache.pkl')
 # {chat_id:False|True}
 SUPER_CHAT = my_dic.PersistentDict('db/super_chat.pkl')
 
-# в каких чатах включен Бард вместо чатГПТ
-BARD_MODE = my_dic.PersistentDict('db/bard_mode.pkl')
+# в каких чатах какой бот отвечает 'chatGPT', 'bard', 'perplexity'
+CHAT_MODE = my_dic.PersistentDict('db/chat_mode.pkl')
 
 # хранилище замков что бы юзеры не могли делать новые запросы пока не получен ответ на старый
 # {chat_id(str):threading.Lock(),...}
@@ -534,21 +534,36 @@ def bard_thread(message: telebot.types.Message):
 
 @bot.message_handler(commands=['bardmode'])
 def bardmode(message: telebot.types.Message):
-    """выключить работу в этой теме/чате"""
+    """включить работу bard в этой теме/чате"""
     if is_admin_member(message):
         chat_id_full = get_topic_id(message)
-        if chat_id_full in BARD_MODE:
-            if BARD_MODE[chat_id_full]:
-                BARD_MODE[chat_id_full] = False
-                bot.reply_to(message, 'Теперь бот отвечает как chatGPT в этой теме/чате')
-            else:
-                BARD_MODE[chat_id_full] = True
-                bot.reply_to(message, 'Теперь бот отвечает как Google Bard в этой теме/чате')
-        else:
-            BARD_MODE[chat_id_full] = True
-            bot.reply_to(message, 'Теперь бот отвечает как Google Bard в этой теме/чате')
+        CHAT_MODE[chat_id_full] = 'bard'
+        bot.reply_to(message, 'Теперь бот отвечает как Google Bard в этой теме/чате')
     else:
         bot.reply_to(message, 'Эта команда только для администраторов')
+
+
+@bot.message_handler(commands=['chatgptmode'])
+def chatGPTmode(message: telebot.types.Message):
+    """включить работу chatGPT в этой теме/чате"""
+    if is_admin_member(message):
+        chat_id_full = get_topic_id(message)
+        CHAT_MODE[chat_id_full] = 'chatGPT'
+        bot.reply_to(message, 'Теперь бот отвечает как chatGPT в этой теме/чате')
+    else:
+        bot.reply_to(message, 'Эта команда только для администраторов')
+
+
+@bot.message_handler(commands=['perplexitymode'])
+def perplexitymode(message: telebot.types.Message):
+    """включить работу perplexity/google в этой теме/чате"""
+    if is_admin_member(message):
+        chat_id_full = get_topic_id(message)
+        CHAT_MODE[chat_id_full] = 'perplexity'
+        bot.reply_to(message, 'Теперь бот отвечает как perplexity/google (ищет ответы в интернете) в этой теме/чате')
+    else:
+        bot.reply_to(message, 'Эта команда только для администраторов')
+
 
 
 @bot.message_handler(commands=['activate']) 
@@ -717,11 +732,11 @@ def clear_thread(message: telebot.types.Message):
 
     chat_id_full = get_topic_id(message)
     user_id = message.from_user.id
-    if chat_id_full in BARD_MODE and BARD_MODE[chat_id_full]:
+    if chat_id_full in CHAT_MODE and CHAT_MODE[chat_id_full] == 'bard':
         my_bard.reset_bard_chat(chat_id_full)
         my_log.log_echo(message, 'История Google Bard принудительно отчищена')
         my_log.log_report(bot, message, chat_id_full, user_id, 'забудь', 'История Google Bard принудительно отчищена')
-    else:
+    elif chat_id_full in CHAT_MODE and CHAT_MODE[chat_id_full] == 'chatGPT':
         DIALOGS_DB[chat_id_full] = []
         my_log.log_echo(message, 'История chatGPT принудительно отчищена')
         my_log.log_report(bot, message, chat_id_full, user_id, 'забудь', 'История chatGPT принудительно отчищена')
@@ -1138,12 +1153,17 @@ def send_welcome_help(message: telebot.types.Message):
 """ + '\n'.join(open('commands.txt', encoding='utf8').readlines())
 
     if is_admin_member(message):
-        help += '\n\n***Дополнение отображается только для администраторов:***\n\n' + """`/activate` - команда для активации работы бота в этой теме
-`/deactivate` - для деактивации работы бота в этой теме
-`/id` - покажет id юзера и группы
+        help += '\n\n***Дополнение отображается только для администраторов:***\n\n' + """/activate - команда для активации работы бота в этой теме
+/deactivate - для деактивации работы бота в этой теме
+
+/bardmode - в этом чате будет отвечать Google Bard
+/chatgptmode - в этом чате будет отвечать ChatGPT
+/perplexitymode - в этом чате будет отвечать Perplexity или Google, ответы будут браться из интернета
+
+/id - покажет id юзера и группы
 /add - для добавления стоп слова
 /del - для удаления стоп слова
-`/export` - для экспорта данных, работает только в привате у бота
+/export - для экспорта данных, работает только в привате у бота
 /restart - для перезапуска бота, если он завис
 
 /sum - пересказ текста по ссылке
@@ -1294,6 +1314,17 @@ def do_task(message, custom_prompt: str = ''):
                 # # сообщить администратору о нарушителе
                 # send_message_to_admin(message, x, [fuzz.ratio(x, keyword) > 80 for keyword in STOP_WORDS])
 
+        # по умолчанию отвечает chatGPT
+        if chat_id_full not in CHAT_MODE:
+            CHAT_MODE[chat_id_full] = 'chatGPT'
+
+        # можно перенаправить запрос к гуглу или если режим perplexity/google
+        if CHAT_MODE[chat_id_full] == 'perplexity' or msg.startswith(tuple(cfg.search_commands)):
+            prompt = message.text.split(maxsplit=1)[1].strip()
+            message.text = f'/google {prompt}'
+            google(message)
+            return
+
         # если сообщение начинается на 'забудь' то стираем историю общения GPT
         if msg.startswith('забудь'):
             clear_thread(message)
@@ -1319,17 +1350,10 @@ def do_task(message, custom_prompt: str = ''):
         #         return
 
         # можно перенаправить запрос к барду
-        elif msg.startswith(tuple(cfg.bard_commands)):
+        if msg.startswith(tuple(cfg.bard_commands)):
             prompt = message.text.split(maxsplit=1)[1].strip()
             message.text = f'/bard {prompt}'
             bard(message)
-            return
-
-        # можно перенаправить запрос к гуглу
-        elif msg.startswith(tuple(cfg.search_commands)):
-            prompt = message.text.split(maxsplit=1)[1].strip()
-            message.text = f'/google {prompt}'
-            google(message)
             return
 
         # слишком длинное сообщение для бота
@@ -1339,7 +1363,7 @@ def do_task(message, custom_prompt: str = ''):
             return
 
         # если активирован бард
-        if chat_id_full in BARD_MODE and BARD_MODE[chat_id_full]:
+        if CHAT_MODE[chat_id_full] == 'bard':
             if len(msg) > my_bard.MAX_REQUEST:
                 bot.reply_to(message, f'Слишком длинное сообщение для барда: {len(msg)} из {my_bard.MAX_REQUEST}')
                 my_log.log_echo(message, f'Слишком длинное сообщение для барда: {len(msg)} из {my_bard.MAX_REQUEST}')
@@ -1369,7 +1393,7 @@ def do_task(message, custom_prompt: str = ''):
                 except Exception as error3:
                     print(f'tb:do_task: {error3}')
                     my_log.log2(f'tb:do_task: {error3}')
-        else:
+        elif CHAT_MODE[chat_id_full] == 'chatGPT':
             # chatGPT, добавляем новый запрос пользователя в историю диалога пользователя
             with ShowAction(message, 'typing'):
 
