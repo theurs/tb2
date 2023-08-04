@@ -26,8 +26,9 @@ if not os.path.exists('logs'):
 
 def log2(text: str) -> None:
     """для дебага"""
+    time_now = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
     log_file_path = 'logs/debug.log'
-    open(log_file_path, 'a', encoding="utf-8").write(f'{text}\n{"="*89}\n')
+    open(log_file_path, 'a', encoding="utf-8").write(f'{time_now}\n\n{text}\n\n{"="*89}\n')
 
 
 def log_echo(message: telebot.types.Message, reply_from_bot: str = '', debug: bool = False) -> None:

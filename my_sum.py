@@ -87,10 +87,10 @@ BEGIN:
                 # for i in to_remove:
                 #     response = response.replace(i, '', 1)
                 first_line = response.split('\n', maxsplit=1)[0].lower()
-                if 'краткое резюме' in first_line:
+                if 'краткое резюме' in first_line or 'краткое содержание' in first_line:
                     response = response.split('\n', maxsplit=1)[1].strip()
                 last_line = response.strip().rsplit('\n', maxsplit=1)[1]
-                if last_line.strip() == 'END':
+                if last_line.strip() == 'END' or last_line.strip() == 'END.':
                     response = response.rsplit('\n', maxsplit=1)[0].strip()
                 result = f'{response}\n\n[Claude Anthropic {len(prompt[:my_claude.MAX_QUERY])} символов]'
         except Exception as error:
