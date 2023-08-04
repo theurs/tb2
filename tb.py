@@ -873,6 +873,7 @@ def google_thread(message: telebot.types.Message):
             with semaphore_talks:
                 try:
                     r = my_perplexity.ask(q)
+                    r += '\n\n[perplexity.ai]'
                 except Exception as perror:
                     print(f'tb:google: {perror}')
                     my_log.log2(f'tb:google: {perror}')
@@ -880,6 +881,7 @@ def google_thread(message: telebot.types.Message):
                 if not r:
                     r = my_google.search(q)
                     r = utils.bot_markdown_to_html(r)
+                    r += '\n\n[google + chatGPT]'
             try:
                 bot.reply_to(message, r, parse_mode = 'HTML', disable_web_page_preview = True, reply_markup=get_keyboard('chat', message))
             except Exception as error2:
