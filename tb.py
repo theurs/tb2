@@ -16,6 +16,7 @@ import pandas as pd
 import cfg
 import gpt_basic
 import my_bard
+import my_claude
 import my_genimg
 import my_dic
 import my_google
@@ -59,7 +60,7 @@ SUM_CACHE = my_dic.PersistentDict('db/sum_cache.pkl')
 # {chat_id:False|True}
 SUPER_CHAT = my_dic.PersistentDict('db/super_chat.pkl')
 
-# в каких чатах какой бот отвечает 'chatGPT', 'bard', 'perplexity'
+# в каких чатах какой бот отвечает 'chatGPT', 'bard', 'perplexity', 'claude'
 CHAT_MODE = my_dic.PersistentDict('db/chat_mode.pkl')
 
 # хранилище замков что бы юзеры не могли делать новые запросы пока не получен ответ на старый
@@ -511,7 +512,7 @@ def bard_thread(message: telebot.types.Message):
     with ShowAction(message, 'typing'):
         try:
             answer = my_bard.chat(user_text, chat_id_full)
-            my_log.log_echo(message, answer, debug = True)
+            # my_log.log_echo(message, answer, debug = True)
             answer = utils.bot_markdown_to_html(answer)
             my_log.log_echo(message, answer)
             if answer:
@@ -530,6 +531,17 @@ def bard_thread(message: telebot.types.Message):
         except Exception as error3:
             print(f'tb:do_task: {error3}')
             my_log.log2(f'tb:do_task: {error3}')
+
+
+@bot.message_handler(commands=['claudemode'])
+def claudemode(message: telebot.types.Message):
+    """включить работу claude в этой теме/чате"""
+    if is_admin_member(message):
+        chat_id_full = get_topic_id(message)
+        CHAT_MODE[chat_id_full] = 'claude'
+        bot.reply_to(message, 'Теперь бот отвечает как Claude Anthropic в этой теме/чате')
+    else:
+        bot.reply_to(message, 'Эта команда только для администраторов')
 
 
 @bot.message_handler(commands=['bardmode'])
@@ -740,6 +752,10 @@ def clear_thread(message: telebot.types.Message):
         DIALOGS_DB[chat_id_full] = []
         my_log.log_echo(message, 'История chatGPT принудительно отчищена')
         my_log.log_report(bot, message, chat_id_full, user_id, 'забудь', 'История chatGPT принудительно отчищена')
+    elif chat_id_full in CHAT_MODE and CHAT_MODE[chat_id_full] == 'claude':
+        my_claude.reset_claude_chat(chat_id_full)
+        my_log.log_echo(message, 'История claude принудительно отчищена')
+        my_log.log_report(bot, message, chat_id_full, user_id, 'забудь', 'История claude принудительно отчищена')
     bot.reply_to(message, 'Ок', parse_mode='Markdown')
 
 
@@ -1156,8 +1172,9 @@ def send_welcome_help(message: telebot.types.Message):
         help += '\n\n***Дополнение отображается только для администраторов:***\n\n' + """/activate - команда для активации работы бота в этой теме
 /deactivate - для деактивации работы бота в этой теме
 
-/bardmode - в этом чате будет отвечать Google Bard
 /chatgptmode - в этом чате будет отвечать ChatGPT
+/bardmode - в этом чате будет отвечать Google Bard
+/claudemode - в этом чате будет отвечать Claude Anthropic
 /perplexitymode - в этом чате будет отвечать Perplexity или Google, ответы будут браться из интернета
 
 /id - покажет id юзера и группы
@@ -1372,7 +1389,7 @@ def do_task(message, custom_prompt: str = ''):
             with ShowAction(message, 'typing'):
                 try:
                     answer = my_bard.chat(message.text, chat_id_full)
-                    my_log.log_echo(message, answer, debug = True)
+                    # my_log.log_echo(message, answer, debug = True)
                     answer = utils.bot_markdown_to_html(answer)
                     my_log.log_echo(message, answer)
                     if answer:
@@ -1387,12 +1404,39 @@ def do_task(message, custom_prompt: str = ''):
                                                     reply_markup=get_keyboard('chat', message))
                         my_log.log_report(bot, message, chat_id_full, user_id, user_text, answer, parse_mode='HTML')
                     else:
-                        my_log.log_echo(message, resp, debug = True)
+                        # my_log.log_echo(message, resp, debug = True)
                         my_log.log_report(bot, message, chat_id_full, user_id, user_text, 'Google Bard не ответил', parse_mode='HTML')
                         bot.reply_to(message, 'Google Bard не ответил')
                 except Exception as error3:
                     print(f'tb:do_task: {error3}')
                     my_log.log2(f'tb:do_task: {error3}')
+        # если активирован клод
+        elif CHAT_MODE[chat_id_full] == 'claude':
+            with ShowAction(message, 'typing'):
+                try:
+                    answer = my_claude.chat(message.text, chat_id_full)
+                    # my_log.log_echo(message, answer, debug = True)
+                    answer = utils.bot_markdown_to_html(answer)
+                    my_log.log_echo(message, answer)
+                    if answer:
+                        answer += '\n\n[Claude Anthropic]'
+                        try:
+                            reply_to_long_message(message, answer, parse_mode='HTML', disable_web_page_preview = True, 
+                                                    reply_markup=get_keyboard('chat', message))
+                        except Exception as error:
+                            print(f'tb:do_task: {error}')
+                            my_log.log2(f'tb:do_task: {error}')
+                            reply_to_long_message(message, answer, parse_mode='', disable_web_page_preview = True, 
+                                                    reply_markup=get_keyboard('chat', message))
+                        my_log.log_report(bot, message, chat_id_full, user_id, user_text, answer, parse_mode='HTML')
+                    else:
+                        # my_log.log_echo(message, resp, debug = True)
+                        my_log.log_report(bot, message, chat_id_full, user_id, user_text, 'Claude Anthropic не ответил', parse_mode='HTML')
+                        bot.reply_to(message, 'Claude Anthropic не ответил')
+                except Exception as error3:
+                    print(f'tb:do_task: {error3}')
+                    my_log.log2(f'tb:do_task: {error3}')
+
         elif CHAT_MODE[chat_id_full] == 'chatGPT':
             # chatGPT, добавляем новый запрос пользователя в историю диалога пользователя
             with ShowAction(message, 'typing'):
@@ -1414,7 +1458,7 @@ def do_task(message, custom_prompt: str = ''):
                         # добавляем ответ счетчик юзера что бы детектить спам
                         test_for_spam(resp, user_id)
                         
-                        my_log.log_echo(message, resp, debug = True)
+                        # my_log.log_echo(message, resp, debug = True)
                         resp = utils.bot_markdown_to_html(resp)
                         my_log.log_echo(message, resp)
 
@@ -1430,7 +1474,7 @@ def do_task(message, custom_prompt: str = ''):
                             reply_to_long_message(message, resp, parse_mode='', disable_web_page_preview = True, 
                                                 reply_markup=get_keyboard('chat', message))
                     else:
-                        my_log.log_echo(message, resp, debug = True)
+                        # my_log.log_echo(message, resp, debug = True)
                         my_log.log_report(bot, message, chat_id_full, user_id, user_text, 'ChatGPT не ответил', parse_mode='HTML')
                         bot.reply_to(message, 'ChatGPT не ответил')
 

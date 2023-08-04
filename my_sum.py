@@ -17,6 +17,7 @@ from youtube_transcript_api import YouTubeTranscriptApi
 import cfg
 import gpt_basic
 import my_log
+import my_claude
 
 
 def get_text_from_youtube(url: str) -> str:
@@ -72,13 +73,24 @@ BEGIN:
 
     result = ''
 
-    try:
-        response = gpt_basic.ai(prompt[:cfg.max_request])
-        if response:
-            result = f'{response}\n\n[chatGPT {len(prompt[:cfg.max_request])} символов]'
-    except Exception as error:
-        print(error)
-        my_log.log2(f'my_sum:summ_text_worker: {error}')
+    # если текст большой то пытаемся его осилить с помощью клода
+    if len(prompt) > cfg.max_request:
+        try:
+            response = my_claude.chat(prompt[:my_claude.MAX_QUERY], 'my_summ')
+            if response:
+                result = f'{response}\n\n[Claude Anthropic {len(prompt[:my_claude.MAX_QUERY])} символов]'
+        except Exception as error:
+            print(error)
+            my_log.log2(f'my_sum:summ_text_worker:claude: {error}')
+
+    if not result:
+        try:
+            response = gpt_basic.ai(prompt[:cfg.max_request])
+            if response:
+                result = f'{response}\n\n[chatGPT {len(prompt[:cfg.max_request])} символов]'
+        except Exception as error:
+            print(error)
+            my_log.log2(f'my_sum:summ_text_worker:chatgpt: {error}')
 
     return result
 
@@ -156,9 +168,9 @@ if __name__ == "__main__":
     """Usage ./summarize.py '|URL|filename"""
     
    
-    # r = summ_url('https://habr.com/ru/articles/748266/')
-    # print(r)
-    # sys.exit(0)
+    r = summ_url('https://www.youtube.com/watch?v=Nl18-rL3ZaQ')
+    print(r)
+    sys.exit(0)
     
     target = sys.argv[1]
 
