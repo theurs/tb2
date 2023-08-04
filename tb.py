@@ -1023,7 +1023,7 @@ def summ_text_thread(message: telebot.types.Message):
                     if url in SUM_CACHE:
                         r = SUM_CACHE[url]
                     if r:
-                        reply_to_long_message(message, r, disable_web_page_preview = True, reply_markup=get_keyboard('translate', message))
+                        reply_to_long_message(message, r, disable_web_page_preview = True, reply_markup=get_keyboard('chat', message))
                         my_log.log_echo(message, r)
 
                         # сохранить в отчет вопрос и ответ для юзера, и там же сохранение в группу
@@ -1053,7 +1053,7 @@ def summ_text_thread(message: telebot.types.Message):
                         if res:
                             reply_to_long_message(message, res, parse_mode='',
                                                 disable_web_page_preview = True,
-                                                reply_markup=get_keyboard('translate', message))
+                                                reply_markup=get_keyboard('chat', message))
                             my_log.log_echo(message, res)
 
                             # сохранить в отчет вопрос и ответ для юзера, и там же сохранение в группу
