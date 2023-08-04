@@ -59,8 +59,8 @@ def ask(query: str, search_focus: str = 'internet') -> str:
             for link in links:
                 text = text.replace(f'[{n + 1}]', f'<a href = "{link[1]}" title = "{html.escape(link[0])}">[{n + 1}]</a>')
                 n += 1
-            for link in links2:
-                text += '\n\n' + f'<a href = "{link[1]}">{html.escape(link[0])}</a>'
+            # for link in links2:
+            #     text += '\n\n' + f'<a href = "{link[1]}">{html.escape(link[0])}</a>'
             return text
 
     return ''
