@@ -1410,7 +1410,7 @@ def do_task(message, custom_prompt: str = ''):
                 with lock:
                     resp = dialog_add_user_request(chat_id_full, message.text, 'gpt')
                     if resp:
-                        
+                        resp += '\n\n[chatGPT]'                        
                         # добавляем ответ счетчик юзера что бы детектить спам
                         test_for_spam(resp, user_id)
                         
@@ -1421,7 +1421,6 @@ def do_task(message, custom_prompt: str = ''):
                         # сохранить в отчет вопрос и ответ для юзера, и там же сохранение в группу
                         my_log.log_report(bot, message, chat_id_full, user_id, user_text, resp, parse_mode='HTML')
 
-                        resp += '\n\n[chatGPT]'
                         try:
                             reply_to_long_message(message, resp, parse_mode='HTML', disable_web_page_preview = True, 
                                                 reply_markup=get_keyboard('chat', message))
