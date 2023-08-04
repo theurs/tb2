@@ -873,7 +873,7 @@ def google_thread(message: telebot.types.Message):
             with semaphore_talks:
                 try:
                     r = my_perplexity.ask(q)
-                    r += '\n\n[perplexity.ai]'
+                    r += '\n\n[perplexity]'
                 except Exception as perror:
                     print(f'tb:google: {perror}')
                     my_log.log2(f'tb:google: {perror}')
