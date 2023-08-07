@@ -1195,7 +1195,10 @@ def reply_to_long_message(message: telebot.types.Message, resp: str, parse_mode:
                           disable_web_page_preview: bool = None, reply_markup: telebot.types.InlineKeyboardMarkup = None):
     """отправляем сообщение, если оно слишком длинное то разбивает на части либо отправляем как текстовый файл"""
     if len(resp) < 20000:
-        chunks = utils.split_text(resp, 3500)
+        if parse_mode == 'HTML':
+            chunks = utils.split_html(resp, 4000)
+        else:
+            chunks = utils.split_text(resp, 4000)
         for chunk in chunks:
             try:
                 bot.reply_to(message, chunk, parse_mode=parse_mode,
