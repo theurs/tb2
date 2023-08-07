@@ -183,8 +183,18 @@ def chat(query: str, dialog: str, reset: bool = False) -> str:
     else:
         lock = threading.Lock()
         CHAT_LOCKS[dialog] = lock
+    result = ''
     with lock:
-        result = chat_request(query, dialog, reset)
+        try:
+            result = chat_request(query, dialog, reset)
+        except Exception as error:
+            print(f'my_bard:chat: {error}')
+            my_log.log2(f'my_bard:chat: {error}')
+            try:
+                result = chat_request(query, dialog, reset)
+            except Exception as error2:
+                print(f'my_bard:chat:2: {error2}')
+                my_log.log2(f'my_bard:chat:2: {error2}')
     return result
 
 
