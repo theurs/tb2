@@ -141,13 +141,13 @@ def chat(query: str, dialog: str, reset: bool = False) -> str:
 
 if __name__ == '__main__':
 
-    prompt = open('1.txt', 'r', encoding='utf-8').read()[:99000]
-    print(chat(prompt, '0'))
+    # prompt = open('1.txt', 'r', encoding='utf-8').read()[:99000]
+    # print(chat(prompt, '0'))
 
-    # while True:
-    #     prompt = input("> ")
-    #     if prompt.strip() == 'забудь':
-    #         reset_claude_chat('0')
-    #         continue
-    #     response = chat(prompt, '0')
-    #     print('bot:', response)
+    while True:
+        prompt = input("> ")
+        if prompt.strip() == 'забудь':
+            reset_claude_chat('0')
+            continue
+        response = chat(prompt, '0')
+        print('bot:', response)
