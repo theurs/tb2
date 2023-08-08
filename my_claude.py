@@ -143,11 +143,14 @@ if __name__ == '__main__':
 
     # prompt = open('1.txt', 'r', encoding='utf-8').read()[:99000]
     # print(chat(prompt, '0'))
+    
+    print(chat('1+1=', 'test'))
+    print(chat('2+2=', 'test'))
 
-    while True:
-        prompt = input("> ")
-        if prompt.strip() == 'забудь':
-            reset_claude_chat('0')
-            continue
-        response = chat(prompt, '0')
-        print('bot:', response)
+    # while True:
+    #     prompt = input("> ")
+    #     if prompt.strip() == 'забудь':
+    #         reset_claude_chat('0')
+    #         continue
+    #     response = chat(prompt, '0')
+    #     print('bot:', response)
