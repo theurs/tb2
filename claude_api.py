@@ -94,7 +94,7 @@ class Client:
     payload = json.dumps({
       "completion": {
         "prompt": f"{prompt}",
-        "timezone": "Asia/Vladivostok",
+        "timezone": "Asia/Kolkata",
         "model": "claude-2"
       },
       "organization_uuid": f"{self.organization_id}",
