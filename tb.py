@@ -869,7 +869,7 @@ def google_thread(message: telebot.types.Message):
     # не обрабатывать команды к другому боту /cmd@botname args
     if is_for_me(message.text)[0]: message.text = is_for_me(message.text)[1]
     else: return
-    
+
     chat_id_full = get_topic_id(message)
     if chat_id_full in GPT_CHAT_LOCKS:
         lock = GPT_CHAT_LOCKS[chat_id_full]
@@ -904,7 +904,8 @@ def google_thread(message: telebot.types.Message):
             with semaphore_talks:
                 try:
                     r = my_perplexity.ask(q)
-                    r += '\n\n[perplexity]'
+                    if r:
+                        r += '\n\n[perplexity]'
                 except Exception as perror:
                     print(f'tb:google: {perror}')
                     my_log.log2(f'tb:google: {perror}')
