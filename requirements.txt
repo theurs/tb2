@@ -2,7 +2,8 @@ attrs==23.1.0
 bardapi
 bs4
 chardet
-claude-api
+# claude-api
+curl_cffi
 duckduckgo_search
 edge_tts
 fake_useragent
