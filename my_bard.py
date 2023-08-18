@@ -21,6 +21,10 @@ CHAT_LOCKS = {}
 MAX_REQUEST = 3100
 
 
+# loop detector
+LOOP = {}
+
+
 def get_new_session():
     """
     Retrieves a new session for making HTTP requests.
@@ -132,7 +136,16 @@ def chat_request(query: str, dialog: str, reset = False) -> str:
     except Exception as links_error:
         # вероятно получили ответ с ошибкой слишком частого доступа, надо сменить ключ
         print(links_error)
-        my_log.log2(f'my_bard.py:chat_request:bard token rotated:current_token: {current_token}\n\n{links_error}')
+        my_log.log2(f'my_bard.py:chat_request: {links_error}')
+
+        if dialog in LOOP:
+            LOOP[dialog] += 1
+        else:
+            LOOP[dialog] = 1
+        if LOOP[dialog] > 2:
+            del LOOP[dialog]
+            return ''
+
         chat_request(query, dialog, reset = True)
         return chat_request(query, dialog, reset)
 
@@ -159,6 +172,9 @@ def chat_request(query: str, dialog: str, reset = False) -> str:
     # except Exception as error2:
     #    print(error2)
     #    my_log.log2(str(error2))
+
+    if dialog in LOOP:
+        del LOOP[dialog]
 
     if len(result) > 4000:
         return result[:4000]
