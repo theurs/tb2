@@ -1393,6 +1393,8 @@ def do_task(message, custom_prompt: str = ''):
             with ShowAction(message, 'typing'):
                 try:
                     answer = my_bard.chat(message.text, chat_id_full)
+                    if not answer:
+                        answer = my_bard.chat(message.text, chat_id_full)
                     # my_log.log_echo(message, answer, debug = True)
                     answer = utils.bot_markdown_to_html(answer)
                     my_log.log_echo(message, answer)
