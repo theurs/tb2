@@ -1341,7 +1341,8 @@ def do_task(message, custom_prompt: str = ''):
 
         # можно перенаправить запрос к гуглу или если режим perplexity/google
         if CHAT_MODE[chat_id_full] == 'perplexity' or msg.startswith(tuple(cfg.search_commands)):
-            prompt = message.text.split(maxsplit=1)[1].strip()
+            prompt = message.text.split(maxsplit=1)[1]
+            my_log.log2(f'/google {prompt}')
             message.text = f'/google {prompt}'
             google(message)
             return
