@@ -274,7 +274,7 @@ def replace_tables(text: str) -> str:
     table = ''
     results = []
     for line in text.split('\n'):
-        if line.count('| ') + line.count(' |') + line.count('|-') + line.count('-|') > 2:
+        if line.count('|') > 2 and len(line) > 4:
             if state == 0:
                 state = 1
             table += line + '\n'
@@ -299,7 +299,11 @@ def replace_tables(text: str) -> str:
             continue
         for line in lines[2:]:
             row = [x.strip() for x in line.split('|') if x]
-            x.add_row(row)
+            try:
+                x.add_row(row)
+            except Exception as error2:
+                my_log.log2(f'tb:replace_tables: {error2}')
+                continue
         new_table = x.get_string()
         text = text.replace(table, f'<code>{new_table}</code>')
 
@@ -308,13 +312,13 @@ def replace_tables(text: str) -> str:
 
 if __name__ == '__main__':
     text = """
-Вот пример таблицы 4 столбца и 5 строк:
+Вот таблица с произвольными данными в 4 столбца и 5 строк:
 
-| Продукт | Белки | Жиры | Жиры |
-|-|-|-|-|..
-| Говядина | 20 | 5 | 0 |
-| Рис | 7 | 1 | 82 |
-| Яблоко | 0,5 | 0,3 | 12 |
-| Молоко | 3 | 4 | 5 |
-| Хлеб | 8 | 1 | 55 |"""
+|St1|St2|St3|St4|
+|-|-|-|-|
+|12|64|32|55|
+|77|22|45|19|
+|33|14|76|40|
+|50|27|16|73|
+|9|81|94|62|"""
     print(replace_tables(text))
