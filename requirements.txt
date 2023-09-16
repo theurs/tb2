@@ -13,6 +13,7 @@ langdetect
 openai
 openpyxl
 pandas
+prettytable
 pyenchant
 python-magic
 # python-magic-bin

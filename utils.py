@@ -11,10 +11,9 @@ import telebot
 import tempfile
 import platform as platform_module
 
+import prettytable
 from bs4 import BeautifulSoup
 from pylatexenc.latex2text import LatexNodes2Text
-
-import my_log
 
 
 def count_tokens(messages):
@@ -120,7 +119,7 @@ def convert_to_mp3(input_file: str) -> str:
         return None
 
 
-def bot_markdown_to_html(text):
+def bot_markdown_to_html(text: str) -> str:
     # переделывает маркдаун от чатботов в хтмл для телеграма
     # сначала делается полное экранирование
     # затем меняются маркдаун теги и оформление на аналогичное в хтмл
@@ -187,6 +186,7 @@ def bot_markdown_to_html(text):
         new_match = match
         text = text.replace(random_string, f'<code>{new_match}</code>')
 
+    text = replace_tables(text)
     return text
 
 
@@ -266,5 +266,77 @@ def split_html(text: str, max_length: int = 1500) -> list:
     return chunks2
 
 
+def replace_tables(text: str) -> str:
+    state = 0
+    table = ''
+    results = []
+    for line in text.split('\n'):
+        if line.count('| ') + line.count(' |') + line.count('|-') + line.count('-|') > 2:
+            if state == 0:
+                state = 1
+            table += line + '\n'
+        else:
+            if state == 1:
+                results.append(table[:-1])
+                table = ''
+                state = 0
+
+    for table in results:
+        x = prettytable.PrettyTable(align = "l",
+                                    set_style = prettytable.MSWORD_FRIENDLY,
+                                    hrules = prettytable.HEADER,
+                                    junction_char = '|')
+        
+        lines = table.split('\n')
+        header = [x.strip() for x in lines[0].split('|') if x]
+        x.field_names = header
+        for line in lines[2:]:
+            row = [x.strip() for x in line.split('|') if x]
+            x.add_row(row)
+        new_table = x.get_string()
+        text = text.replace(table, f'<code>{new_table}</code>')
+
+    return text
+
+
 if __name__ == '__main__':
-    pass
+    text = """Вот пример таблицы с двумя столбцами, которую я создал с помощью markdown:
+
+| Страна | Столица |
+| ------ | ------- |
+| Франция | Париж |
+| Япония | Токио |
+| Индия | Нью-Дели |
+
+Вы можете использовать этот формат для создания своих собственных таблиц с двумя столбцами. Просто введите вертикальную черту (|) для разделения ячеек и тире (-) для разделения заголовков от данных. Вы также можете выравнивать текст в ячейках по левому, правому или центральному краю, используя двоеточия (:) в строке с тире.
+
+Сравнение характеристик
+
+| Характеристика | Skoda Octavia | Toyota Avensis |
+|---|---|---|
+| Цена | От 1,6 млн рублей | От 1,7 млн рублей |
+| Двигатель | 1.4 TSI (150 л.с.), 1.6 TDI (110 л.с.), 2.0 TSI (180 л.с.) | 1.6 Valvematic (122 л.с.), 2.0 Valvematic (152 л.с.) |
+| Коробка передач | Механическая, автоматическая | Механическая, автоматическая |
+| Расход топлива | 5,2-7,3 л/100 км | 6,2-7,8 л/100 км |
+| Размеры | 4689x1814x1460 мм | 4695x1770x1470 мм |
+| Объем багажника | 566 л | 520 л |
+| Гарантия | 5 лет | 3 года |
+
+Вывод
+
+Сравнение автомобилей Skoda Octavia и Toyota Avensis
+
+| Характеристика | Skoda Octavia | Toyota Avensis |
+|---|---|---|
+| Цена | От 1,6 млн рублей | От 1,7 млн рублей |
+| Двигатель | 1.4 TSI (150 л.с.), 1.6 TDI (110 л.с.), 2.0 TSI (180 л.с.) | 1.6 Valvematic (122 л.с.), 2.0 Valvematic (152 л.с.) |
+| Коробка передач | Механическая, автоматическая | Механическая, автоматическая |
+| Расход топлива | 5,2-7,3 л/100 км | 6,2-7,8 л/100 км |
+| Размеры | 4689x1814x1460 мм | 4695x1770x1470 мм |
+| Объем багажника | 566 л | 520 л |
+| Гарантия | 5 лет | 3 года |
+
+Сравнительный анализ
+
+"""
+    print(replace_tables(text))
