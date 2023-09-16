@@ -291,14 +291,14 @@ def replace_tables(text: str) -> str:
                                     junction_char = '|')
         
         lines = table.split('\n')
-        header = [x.strip() for x in lines[0].split('|') if x]
+        header = [x.strip().replace('<b>','').replace('</b>','') for x in lines[0].split('|') if x]
         try:
             x.field_names = header
         except Exception as error:
             my_log.log2(f'tb:replace_tables: {error}')
             continue
         for line in lines[2:]:
-            row = [x.strip() for x in line.split('|') if x]
+            row = [x.strip().replace('<b>','').replace('</b>','') for x in line.split('|') if x]
             try:
                 x.add_row(row)
             except Exception as error2:
