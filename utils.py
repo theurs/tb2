@@ -15,6 +15,8 @@ import prettytable
 from bs4 import BeautifulSoup
 from pylatexenc.latex2text import LatexNodes2Text
 
+import my_log
+
 
 def count_tokens(messages):
     """
@@ -290,7 +292,11 @@ def replace_tables(text: str) -> str:
         
         lines = table.split('\n')
         header = [x.strip() for x in lines[0].split('|') if x]
-        x.field_names = header
+        try:
+            x.field_names = header
+        except Exception as error:
+            my_log.log2(f'tb:replace_tables: {error}')
+            continue
         for line in lines[2:]:
             row = [x.strip() for x in line.split('|') if x]
             x.add_row(row)
@@ -304,7 +310,7 @@ if __name__ == '__main__':
     text = """
 Вот пример таблицы 4 столбца и 5 строк:
 
-| Продукт | Белки | Жиры | Углеводы |
+| Продукт | Белки | Жиры | Жиры |
 |-|-|-|-|..
 | Говядина | 20 | 5 | 0 |
 | Рис | 7 | 1 | 82 |
