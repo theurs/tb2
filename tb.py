@@ -82,6 +82,11 @@ stop_words_lock = threading.Lock()
 # {user_id: Spamer}
 SPAMERS = {}
 
+# запоминаем прилетающие сообщения, если они слишком длинные и
+# были отправлены клеинтом по кускам {id:[messages]}
+# ловим сообщение и ждем полсекунды не прилетит ли еще кусок
+MESSAGE_QUEUE = {}
+
 # защита от одновременного доступа к файлу экспорта
 panda_export_lock = threading.Lock()
 
@@ -1285,6 +1290,26 @@ def do_task(message, custom_prompt: str = ''):
     # не обрабатывать неизвестные команды
     if message.text.startswith('/'): return
 
+
+    # отлавливаем слишком длинные сообщения
+    if chat_id_full not in MESSAGE_QUEUE:
+        MESSAGE_QUEUE[chat_id_full] = message.text
+        last_state = MESSAGE_QUEUE[chat_id_full]
+        n = 5
+        while n > 0:
+            n -= 1
+            time.sleep(0.1)
+            new_state = MESSAGE_QUEUE[chat_id_full]
+            if last_state != new_state:
+                last_state = new_state
+                n = 5
+        message.text = last_state
+        del MESSAGE_QUEUE[chat_id_full]
+    else:
+        MESSAGE_QUEUE[chat_id_full] += message.text + '\n\n'
+        return
+
+
     with semaphore_talks:
 
         my_log.log_echo(message)
@@ -1448,6 +1473,10 @@ def do_task(message, custom_prompt: str = ''):
                     my_log.log2(f'tb:do_task: {error3}')
 
         elif CHAT_MODE[chat_id_full] == 'chatGPT':
+            if len(msg) > cfg.CHATGPT_MAX_REQUEST:
+                bot.reply_to(message, f'{tr("Слишком длинное сообщение для chatGPT:", lang)} {len(msg)} {tr("из", lang)} {cfg.CHATGPT_MAX_REQUEST}')
+                my_log.log_echo(message, f'Слишком длинное сообщение для chatGPT: {len(msg)} из {cfg.CHATGPT_MAX_REQUEST}')
+                return
             # chatGPT, добавляем новый запрос пользователя в историю диалога пользователя
             with ShowAction(message, 'typing'):
 
