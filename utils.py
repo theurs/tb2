@@ -268,6 +268,23 @@ def split_html(text: str, max_length: int = 1500) -> list:
     return chunks2
 
 
+def split_long_string(long_string: str, header = False, MAX_LENGTH = 24) -> str:
+    if len(long_string) <= MAX_LENGTH:
+        return long_string
+    if header:
+        return long_string[:MAX_LENGTH-2] + '..'
+    split_strings = []
+    while len(long_string) > MAX_LENGTH:
+        split_strings.append(long_string[:MAX_LENGTH])
+        long_string = long_string[MAX_LENGTH:]
+
+    if long_string:
+        split_strings.append(long_string)
+
+    result = "\n".join(split_strings) 
+    return result
+
+
 def replace_tables(text: str) -> str:
     text += '\n'
     state = 0
@@ -291,14 +308,16 @@ def replace_tables(text: str) -> str:
                                     junction_char = '|')
         
         lines = table.split('\n')
-        header = [x.strip().replace('<b>','').replace('</b>','') for x in lines[0].split('|') if x]
+        header = [x.strip().replace('<b>', '').replace('</b>', '') for x in lines[0].split('|') if x]
+        header = [split_long_string(x, header = True) for x in header]
         try:
             x.field_names = header
         except Exception as error:
             my_log.log2(f'tb:replace_tables: {error}')
             continue
         for line in lines[2:]:
-            row = [x.strip().replace('<b>','').replace('</b>','') for x in line.split('|') if x]
+            row = [x.strip().replace('<b>', '').replace('</b>', '') for x in line.split('|') if x]
+            row = [split_long_string(x) for x in row]
             try:
                 x.add_row(row)
             except Exception as error2:
@@ -314,10 +333,10 @@ if __name__ == '__main__':
     text = """
 Вот таблица с произвольными данными в 4 столбца и 5 строк:
 
-|St1|St2|St3|St4|
+|St1|St2|St888888888888888888888888 88888888888888888888883|St4|
 |-|-|-|-|
 |12|64|32|55|
-|77|22|45|19|
+|77|22|45|1000000000000000 0000000000000000000000000000009|
 |33|14|76|40|
 |50|27|16|73|
 |9|81|94|62|"""
