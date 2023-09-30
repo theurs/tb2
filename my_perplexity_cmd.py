@@ -43,7 +43,7 @@ def ask(query: str, search_focus: str = 'internet') -> str:
         links = []
         for x in d['web_results']:
             # result += f'[{n}] <a href="{x["url"]}">{html.escape(x["name"])}</a>\n\n'
-            links.append(f'<a href="{x["url"]}" title="{html.escape(x["name"])}">[{n}]</a>')
+            links.append(f'<a href="{x["url"]}">[{n}]</a>')
             n += 1
         result = utils.bot_markdown_to_html(result)
         # заменяем ссылки
