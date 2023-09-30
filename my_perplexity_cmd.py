@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 
+import html
 import json
 import sys
 
@@ -38,7 +39,7 @@ def ask(query: str, search_focus: str = 'internet') -> str:
     try:
         result += '\n\n'
         for x in d['web_results']:
-            result += f'<a href="{x["url"]}">{x["name"]}</a>\n'
+            result += f'<a href="{x["url"]}">{html.escape(x["name"])}</a>\n\n'
     except Exception as error:
             print(error)
             my_log.log2(f'my_perplexity.py:ask: {error}')
