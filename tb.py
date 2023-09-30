@@ -1203,7 +1203,9 @@ def send_welcome_help(message: telebot.types.Message):
 
 
 def reply_to_long_message(message: telebot.types.Message, resp: str, parse_mode: str = None,
-                          disable_web_page_preview: bool = None, reply_markup: telebot.types.InlineKeyboardMarkup = None):
+                          disable_web_page_preview: bool = None,
+                          reply_markup: telebot.types.InlineKeyboardMarkup = None,
+                          disable_notification = True):
     """отправляем сообщение, если оно слишком длинное то разбивает на части либо отправляем как текстовый файл"""
     if len(resp) < 20000:
         if parse_mode == 'HTML':
@@ -1214,13 +1216,15 @@ def reply_to_long_message(message: telebot.types.Message, resp: str, parse_mode:
             try:
                 bot.reply_to(message, chunk, parse_mode=parse_mode,
                              disable_web_page_preview=disable_web_page_preview,
-                             reply_markup=reply_markup)
+                             reply_markup=reply_markup,
+                             disable_notification=disable_notification)
             except Exception as error:
                 print(f'tb:reply_to_long_message: {error}')
                 my_log.log2(f'tb:reply_to_long_message: {error}')
                 bot.reply_to(message, chunk, parse_mode='',
                              disable_web_page_preview=disable_web_page_preview,
-                             reply_markup=reply_markup)
+                             reply_markup=reply_markup,
+                             disable_notification=disable_notification)
             time.sleep(2)
     else:
         buf = io.BytesIO()
