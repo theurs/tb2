@@ -4,6 +4,7 @@
 import json
 import sys
 
+import my_log
 from Perplexity import Perplexity
 
 
@@ -32,7 +33,7 @@ def ask(query: str, search_focus: str = 'internet') -> str:
         result = d['answer']
     except Exception as error:
         print(error)
-        # my_log.log2(f'my_perplexity.py:ask: {error}')
+        my_log.log2(f'my_perplexity.py:ask: {error}')
 
     try:
         result += '\n\n'
@@ -40,7 +41,7 @@ def ask(query: str, search_focus: str = 'internet') -> str:
             result += f'<a href="{x["url"]}">{x["name"]}</a>\n'
     except Exception as error:
             print(error)
-            # my_log.log2(f'my_perplexity.py:ask: {error}')
+            my_log.log2(f'my_perplexity.py:ask: {error}')
 
     perplexity.close()
 

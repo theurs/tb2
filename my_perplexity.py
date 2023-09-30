@@ -5,7 +5,9 @@ import subprocess
 
 
 def ask(query: str) -> str:
-    process = subprocess.Popen(['./my_perplexity_cmd.py', query], stdout = subprocess.PIPE)
+    process = subprocess.Popen(['/home/ubuntu/.tb2/bin/python',
+                                '/home/ubuntu/tb2/my_perplexity_cmd.py',
+                                query], stdout = subprocess.PIPE)
     output, error = process.communicate()
     r = output.decode('utf-8').strip()
     if error != None:
