@@ -27,12 +27,11 @@ def ask(query: str, search_focus: str = 'internet') -> str:
 
     try:
         perplexity = Perplexity()
-        answer = perplexity.search(query, search_focus=search_focus)
+        answer = perplexity.search(query, search_focus=search_focus, timeout = 30)
         result = ''
         for i in answer:
             pass
-        d = json.loads(i['text'])
-        result = d['answer']
+        result = i['answer']
     except Exception as error:
         print(error)
         my_log.log2(f'my_perplexity.py:ask: {error}')
@@ -41,7 +40,7 @@ def ask(query: str, search_focus: str = 'internet') -> str:
         result += '\n\n'
         n = 1
         links = []
-        for x in d['web_results']:
+        for x in i['web_results']:
             # result += f'[{n}] <a href="{x["url"]}">{html.escape(x["name"])}</a>\n\n'
             links.append(f'<a href="{x["url"]}">[{n}]</a>')
             n += 1
