@@ -908,8 +908,8 @@ def google_thread(message: telebot.types.Message):
         with ShowAction(message, 'typing'):
             with semaphore_talks:
                 try:
-                    # r = my_perplexity.ask(q)
-                    r = ''
+                    r = my_perplexity.ask(q)
+                    # r = ''
                     if r:
                         r += '\n\n[perplexity]'
                 except Exception as perror:
