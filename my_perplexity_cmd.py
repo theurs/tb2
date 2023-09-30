@@ -39,9 +39,17 @@ def ask(query: str, search_focus: str = 'internet') -> str:
     try:
         result += '\n\n'
         n = 1
+        links = []
         for x in d['web_results']:
-            result += f'[{n}] <a href="{x["url"]}">{html.escape(x["name"])}</a>\n\n'
+            # result += f'[{n}] <a href="{x["url"]}">{html.escape(x["name"])}</a>\n\n'
+            links.append(f'<a href = "{x["url"]}">[{n}]</a>')
             n += 1
+
+        # заменяем ссылки
+        for x in range(1, 11):
+            if f'[{x}]' in result:
+                result = result.replace(f'[{x}]', links[x-1])
+
     except Exception as error:
             print(error)
             my_log.log2(f'my_perplexity.py:ask: {error}')
