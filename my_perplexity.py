@@ -14,4 +14,6 @@ def ask(query: str) -> str:
 
 
 if __name__ == '__main__':
-    print(ask('1+1'))  
+    while True:
+        q = input('>')
+        print(ask(q))

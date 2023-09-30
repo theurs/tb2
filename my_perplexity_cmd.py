@@ -28,8 +28,9 @@ def ask(query: str, search_focus: str = 'internet') -> str:
         answer = perplexity.search(query, search_focus=search_focus)
         result = ''
         for i in answer:
-            d = json.loads(i['text'])
-            result += d['answer']
+            pass
+        d = json.loads(i['text'])
+        result = d['answer']
     except Exception as error:
         print(error)
         my_log.log2(f'my_perplexity.py:ask: {error}')
