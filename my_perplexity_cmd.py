@@ -38,8 +38,10 @@ def ask(query: str, search_focus: str = 'internet') -> str:
 
     try:
         result += '\n\n'
+        n = 1
         for x in d['web_results']:
-            result += f'<a href="{x["url"]}">{html.escape(x["name"])}</a>\n\n'
+            result += f'[{n}] <a href="{x["url"]}">{html.escape(x["name"])}</a>\n\n'
+            n += 1
     except Exception as error:
             print(error)
             my_log.log2(f'my_perplexity.py:ask: {error}')
