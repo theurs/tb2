@@ -920,11 +920,15 @@ def google_thread(message: telebot.types.Message):
                     r = utils.bot_markdown_to_html(r)
                     r += '\n\n[google + chatGPT]'
             try:
-                bot.reply_to(message, r, parse_mode = 'HTML', disable_web_page_preview = True, reply_markup=get_keyboard('chat', message))
+                reply_to_long_message(message, r, parse_mode = 'HTML',
+                                      disable_web_page_preview = True,
+                                      reply_markup=get_keyboard('chat', message))
             except Exception as error2:
                 print(f'tb:google: {error2}')
                 my_log.log2(f'tb:google: {error2}')
-                bot.reply_to(message, r, parse_mode = '', disable_web_page_preview = True, reply_markup=get_keyboard('chat', message))
+                reply_to_long_message(message, r, parse_mode = '',
+                                      disable_web_page_preview = True,
+                                      reply_markup=get_keyboard('chat', message))
             my_log.log_echo(message, r)
 
             # сохранить в отчет вопрос и ответ для юзера, и там же сохранение в группу
