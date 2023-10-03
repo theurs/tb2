@@ -478,6 +478,7 @@ def handle_photo_thread(message: telebot.types.Message):
         return
 
     chat_id_full = get_topic_id(message)
+    user_id = message.from_user.id
 
     with semaphore_talks:
         with ShowAction(message, 'typing'):
@@ -487,9 +488,12 @@ def handle_photo_thread(message: telebot.types.Message):
             image = bot.download_file(file_info.file_path)
             result = my_bard.chat_image(f'Опиши что нарисовано на картинке, дай краткое но ёмкое описание изображения, так что бы человек понял что здесь изображено.', chat_id_full, image)
             result = utils.bot_markdown_to_html(result)
-            reply_to_long_message(message, result, parse_mode='HTML', reply_markup=get_keyboard('chat', message))
+            reply_to_long_message(message, result, parse_mode='HTML',
+                                  reply_markup=get_keyboard('chat', message))
             message.text = '[юзер отправил картинку] ' + (message.caption or 'без подписи')
             my_log.log_echo(message, result)
+            my_log.log_report(bot, message, chat_id_full, user_id, message.text, result,
+                              parse_mode='HTML')
 
 
 @bot.message_handler(commands=['mem'])
