@@ -488,6 +488,7 @@ def handle_photo_thread(message: telebot.types.Message):
             result = my_bard.chat_image(f'Опиши что нарисовано на картинке, дай краткое но ёмкое описание изображения, так что бы человек понял что здесь изображено.', chat_id_full, image)
             result = utils.bot_markdown_to_html(result)
             reply_to_long_message(message, result, parse_mode='HTML', reply_markup=get_keyboard('chat', message))
+            message.text = '[юзер отправил картинку] ' + (message.caption or 'без подписи')
             my_log.log_echo(message, result)
 
 
