@@ -285,7 +285,7 @@ class Perplexity:
         while not self.finished or len(self.queue) != 0:
             if len(self.queue) != 0:
                 return self.queue.pop(0)
-    
+
     def close(self) -> None:
         self.ws.close()
 

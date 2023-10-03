@@ -214,5 +214,75 @@ def chat(query: str, dialog: str, reset: bool = False) -> str:
     return result
 
 
+def chat_request_image(query: str, dialog: str, image: bytes, reset = False):
+    """
+    Function to make a chat request with an image.
+    
+    Args:
+        query (str): The query for the chat request.
+        dialog (str): The index of the dialog.
+        image (bytes): The image to be used in the chat request.
+        reset (bool, optional): Whether to reset the chat dialog. Defaults to False.
+    
+    Returns:
+        str: The response from the chat request.
+    """
+    if reset:
+        reset_bard_chat(dialog)
+        return
+
+    if dialog in DIALOGS:
+        session = DIALOGS[dialog]
+    else:
+        session = get_new_session()
+        DIALOGS[dialog] = session
+
+    try:
+        response = session.ask_about_image(query, image)['content']
+    except Exception as error:
+        print(error)
+        my_log.log2(str(error))
+
+        try:
+            del DIALOGS[dialog]
+            session = get_new_session()
+            DIALOGS[dialog] = session
+        except KeyError:
+            print(f'no such key in DIALOGS: {dialog}')
+            my_log.log2(f'my_bard.py:chat:no such key in DIALOGS: {dialog}')
+
+        try:
+            response = session.ask_about_image(query, image)['content']
+        except Exception as error2:
+            print(error2)
+            my_log.log2(str(error2))
+            return ''
+
+    return response
+
+
+def chat_image(query: str, dialog: str, image: bytes, reset: bool = False) -> str:
+    """
+    Executes a chat request with an image.
+
+    Args:
+        query (str): The query string for the chat request.
+        dialog (str): The ID of the dialog.
+        image (bytes): The image to be included in the chat request.
+        reset (bool, optional): Whether to reset the dialog state. Defaults to False.
+
+    Returns:
+        str: The response from the chat request.
+    """
+    if dialog in CHAT_LOCKS:
+        lock = CHAT_LOCKS[dialog]
+    else:
+        lock = threading.Lock()
+        CHAT_LOCKS[dialog] = lock
+    with lock:
+        result = chat_request_image(query, dialog, image, reset)
+    return result
+
+
 if __name__ == "__main__":
     print(chat('hi', '0'))
