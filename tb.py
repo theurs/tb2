@@ -452,7 +452,7 @@ def handle_voice_thread(message: telebot.types.Message):
                     reply_to_long_message(message, text)
                     my_log.log_echo(message, f'[ASR] {text}')
                 else:
-                    # bot.reply_to(message, 'Очень интересно, но ничего не понятно.', reply_markup=get_keyboard('hide', message))
+                    # bot.reply_to(message, 'Очень интересно, но ничего не понятно.', reply_markup=get_keyboard('chat', message))
                     my_log.log_echo(message, '[ASR] no results')
 
                 # и при любом раскладе отправляем текст в обработчик текстовых сообщений,
@@ -487,7 +487,7 @@ def handle_photo_thread(message: telebot.types.Message):
             image = bot.download_file(file_info.file_path)
             result = my_bard.chat_image(f'Опиши что нарисовано на картинке, дай краткое но ёмкое описание изображения, так что бы человек понял что здесь изображено.', chat_id_full, image)
             result = utils.bot_markdown_to_html(result)
-            reply_to_long_message(message, result, parse_mode='HTML', reply_markup=get_keyboard('hide', message))
+            reply_to_long_message(message, result, parse_mode='HTML', reply_markup=get_keyboard('chat', message))
             my_log.log_echo(message, result)
 
 
