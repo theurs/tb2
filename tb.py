@@ -1286,6 +1286,23 @@ def send_message_to_admin(message: telebot.types.Message, bad_word_found: str, s
                      disable_web_page_preview = True)
 
 
+def send_message_to_admin2(message: telebot.types.Message, user_msg: str, moderation_result: str):
+    # Отправка ссылки на сообщение администратору
+    chat_id = cfg.report_id[0]
+    thread_id = cfg.report_id[1]
+
+    # my_log.log2(str(message))
+
+    if message.is_topic_message:
+        message_link = f't.me/c/{str(message.chat.id)[3:]}/{message.reply_to_message.message_id}/{message.message_id}'
+    else:
+        message_link = f't.me/{message.chat.username}/{message.message_id}'
+
+    bot.send_message(chat_id=chat_id, message_thread_id = thread_id, 
+                     text=f"Посмотрите сообщение здесь, возможно нарушение\n\n{user_msg}\n\n{moderation_result}\n\n{message_link}",
+                     disable_web_page_preview = True)
+
+
 def test_for_spam(text: str, user_id: int) -> bool:
     """функция проверки на спам, возвращает True если юзер слишком много токенов тратит"""
     try:
@@ -1389,6 +1406,11 @@ def do_task(message, custom_prompt: str = ''):
         if msg.startswith(BOT_NAME):
             message.text = message.text.split(maxsplit = 1)[1]
             msg = message.text.lower()
+
+        # если есть запрещенный в opanai контент
+        moderation_result = gpt_basic.moderation(message.text)
+        if moderation_result:
+            send_message_to_admin2(message, user_text, moderation_result)
 
         # если есть совпадение в списке стоп слов
         # удаляем все символы кроме букв

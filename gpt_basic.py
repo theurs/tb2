@@ -462,10 +462,67 @@ def get_list_of_models():
     return sorted(list(set(result)))
 
 
+def moderation(text: str) -> str:
+    """
+    This function performs moderation on the given text.
+
+    Parameters:
+        text (str): The text to be moderated.
+
+    Returns:
+        str: The result of the moderation process, which may contain categories of flagged content.
+    """
+    for server in cfg.openai_servers:
+        openai.api_base = server[0]
+        openai.api_key = server[1]
+
+        try:
+            response = openai.Moderation.create(input=text)
+            if response:
+                result = response['results'][0]['flagged']
+                break
+        except Exception as error:
+            print(error)
+            my_log.log2(f'gpt_basic.moderation: {error}\n\nServer: {openai.api_base}')
+
+    categories = response['results'][0]['categories']
+    result = ''
+
+    if categories['sexual']:
+        result += 'сексуальное содержание, '
+    if categories['hate']:
+        result += 'ненависть, '
+    if categories['harassment']:
+        result += 'домогательства, '
+    if categories['self-harm']:
+        result += 'самоповреждение, '
+    if categories['sexual/minors']:
+        result += 'сексуальный контент с несовершеннолетними, '
+    if categories['hate/threatening']:
+        result += 'ненависть/угрозы, '
+    if categories['violence/graphic']:
+        result += 'насилие/эксплицитный контент, '
+    if categories['self-harm/intent']:
+        result += 'намерение причинить себе вред, '
+    if categories['self-harm/instructions']:
+        result += 'инструкции по причинению себе вреда, '
+    if categories['harassment/threatening']:
+        result += 'домогательства/угрозы, '
+    if categories['self-harm/intent']:
+        result += 'причинение себе вреда, '
+
+    if result.endswith(', '):
+        result = result[:-2]
+
+    return result
+
+
 if __name__ == '__main__':
 
-    for x in range(5, 15):
-       print(ai(f'1+{x}='))
+    print(moderation('я тебя убью'))
+
+    # for x in range(5, 15):
+    #    print(ai(f'1+{x}='))
 
     # print(image_gen('большой бадабум'))
     # print(get_list_of_models())
