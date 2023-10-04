@@ -1408,7 +1408,12 @@ def do_task(message, custom_prompt: str = ''):
             msg = message.text.lower()
 
         # если есть запрещенный в opanai контент
-        moderation_result = gpt_basic.moderation(message.text)
+        try:
+            moderation_result = gpt_basic.moderation(message.text)
+        except Exception as error:
+            print(f'tb:do_task:moderation: {error}')
+            my_log.log2(f'tb:do_task:moderation: {error}')
+            moderation_result = ''
         if moderation_result:
             send_message_to_admin2(message, user_text, moderation_result)
 
