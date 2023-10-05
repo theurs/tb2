@@ -499,6 +499,47 @@ def handle_photo_thread(message: telebot.types.Message):
                               parse_mode='HTML')
 
 
+
+@bot.message_handler(content_types = ['document'])
+def handle_document(message: telebot.types.Message):
+    """Обработчик документов"""
+    thread = threading.Thread(target=handle_document_thread, args=(message,))
+    thread.start()
+def handle_document_thread(message: telebot.types.Message):
+    """Обработчик документов"""
+
+    my_log.log_media(message)
+
+    # работаем только там где администратор включил
+    if not activated_location(message):
+        return
+
+    chat_id_full = get_topic_id(message)
+    user_id = message.from_user.id
+
+    if test_for_spam('Ж' * cfg.max_request, message.from_user.id):
+        bot.reply_to(message, 'Слишком много сообщений, попробуйте позже')
+        return
+
+    with semaphore_talks:
+        with ShowAction(message, 'typing'):
+            document = message.document
+            if document.mime_type in ('image/jpeg', 'image/png'):
+                with ShowAction(message, 'typing'):
+                    # скачиваем документ в байтовый поток
+                    file_id = message.document.file_id
+                    file_info = bot.get_file(file_id)
+                    image = bot.download_file(file_info.file_path)
+                    result = my_bard.chat_image('Опиши что нарисовано на картинке, дай краткое но ёмкое описание изображения, так что бы человек понял что здесь изображено.', chat_id_full, image)
+                    result = utils.bot_markdown_to_html(result)
+                    reply_to_long_message(message, result, parse_mode='HTML',
+                                        reply_markup=get_keyboard('chat', message))
+                    message.text = '[юзер отправил картинку] ' + (message.caption or 'без подписи')
+                    my_log.log_echo(message, result)
+                    my_log.log_report(bot, message, chat_id_full, user_id, message.text, result,
+                                    parse_mode='HTML')
+
+
 @bot.message_handler(commands=['mem'])
 def send_debug_history(message: telebot.types.Message):
     """
