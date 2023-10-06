@@ -480,7 +480,7 @@ def handle_photo_thread(message: telebot.types.Message):
     chat_id_full = get_topic_id(message)
     user_id = message.from_user.id
 
-    if test_for_spam('Ж' * cfg.max_request, message.from_user.id):
+    if test_for_spam('Ж' * 2000, message.from_user.id):
         bot.reply_to(message, 'Слишком много сообщений, попробуйте позже')
         return
 
