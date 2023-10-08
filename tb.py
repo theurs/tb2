@@ -1652,7 +1652,7 @@ def main():
     """
     Runs the main function, which sets default commands and starts polling the bot.
     """
-    set_default_commands()
+    #set_default_commands()
     bot.polling(timeout=90, long_polling_timeout = 90)
 
 
