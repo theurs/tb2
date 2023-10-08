@@ -1645,7 +1645,11 @@ def set_default_commands():
                     commands.append(telebot.types.BotCommand(command, description))
             except Exception as error:
                 print(error)
-    bot.set_my_commands(commands)
+    try:
+        bot.set_my_commands(commands)
+    except Exception as error:
+        print(error)
+        my_log.log2(f'tb:set_default_commands: {error}')
 
 
 def main():
