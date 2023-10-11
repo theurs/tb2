@@ -987,7 +987,7 @@ def google_thread(message: telebot.types.Message):
             with semaphore_talks:
                 try:
                     r = ''
-                    r = my_perplexity.ask(q)
+                    # r = my_perplexity.ask(q)
                     if r:
                         r += '\n\n[perplexity]'
                 except Exception as perror:
