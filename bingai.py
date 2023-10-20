@@ -10,6 +10,7 @@ import queue
 
 from re_edge_gpt import Chatbot, ConversationStyle, ImageGen
 
+import gpt_basic
 import my_log
 
 
@@ -246,6 +247,8 @@ def gen_imgs(prompt: str):
     Raises:
         None
     """
+    if gpt_basic.moderation(prompt):
+        return []
     with lock_gen_img:
         with open("cookies.json") as f:
             c = json.load(f)
