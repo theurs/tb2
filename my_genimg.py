@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 
+from multiprocessing.pool import ThreadPool
+
 import bingai
-import cfg
 import gpt_basic
 import my_log
 
@@ -18,13 +19,21 @@ def openai(prompt: str):
 
 
 def gen_images(prompt: str):
-    """рисует с помощью бинга и с сервисом от chimera"""
-    bing_images = bingai.gen_imgs(prompt)
+    """рисует одновременно и с помощью бинга и с сервисом от chimera"""
+
+    pool = ThreadPool(processes=2)
+
+    async_result1 = pool.apply_async(bingai.gen_imgs, (prompt,))
+    async_result2 = pool.apply_async(openai, (prompt,))
+
+    bing_images = async_result1.get()
+    openai_images = async_result2.get()
+
     if not isinstance(bing_images, list):
         bing_images = []
-    openai_images = openai(prompt)
     if not isinstance(openai_images, list):
         openai_images = []
+
     return bing_images + openai_images
 
 
