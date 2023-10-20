@@ -41,8 +41,8 @@ BOT_ID = bot.get_me().id
 
 
 # телеграм группа для отправки сгенерированных картинок
-# pics_group = cfg.pics_group
-# pics_group_url = cfg.pics_group_url
+pics_group = cfg.pics_group
+pics_group_url = cfg.pics_group_url
 
 # до 40 одновременных потоков для чата с гпт и бингом
 semaphore_talks = threading.Semaphore(40)
@@ -1067,6 +1067,15 @@ def image_thread(message: telebot.types.Message):
                         bot.send_media_group(message.chat.id, medias,
                                              reply_to_message_id=message.message_id,
                                              disable_notification=True)
+
+                        # сохранить результат в галерее
+                        if pics_group:
+                            try:
+                                bot.send_message(cfg.pics_group, prompt, disable_web_page_preview = True)
+                                bot.send_media_group(pics_group, medias)
+                            except Exception as error2:
+                                print(error2)
+                                my_log.log2(error2)
 
                         my_log.log_echo(message, '[image gen] ')
 
