@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 
+import bingai
 import cfg
 import gpt_basic
 import my_log
@@ -17,8 +18,8 @@ def openai(prompt: str):
 
 
 def gen_images(prompt: str):
-    """рисует одновременно и с помощью бинга и с сервисом от chimera"""
-    return openai(prompt)
+    """рисует с помощью бинга и с сервисом от chimera"""
+    return bingai.gen_imgs(prompt) + openai(prompt)
 
 
 if __name__ == '__main__':
