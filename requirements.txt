@@ -23,6 +23,7 @@ pylatexenc
 PyPDF2
 PySocks
 python-Levenshtein
+re_edge_gpt
 telebot
 SpeechRecognition
 # python -m textblob.download_corpora
