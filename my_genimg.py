@@ -19,7 +19,13 @@ def openai(prompt: str):
 
 def gen_images(prompt: str):
     """рисует с помощью бинга и с сервисом от chimera"""
-    return bingai.gen_imgs(prompt) + openai(prompt)
+    bing_images = bingai.gen_imgs(prompt)
+    if not isinstance(bing_images, list):
+        bing_images = []
+    openai_images = openai(prompt)
+    if not isinstance(openai_images, list):
+        openai_images = []
+    return bing_images + openai_images
 
 
 if __name__ == '__main__':
