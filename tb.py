@@ -1022,80 +1022,73 @@ def google_thread(message: telebot.types.Message):
                                     ]
 
 
-# @bot.message_handler(commands=['image','img'])
-# def image(message: telebot.types.Message):
-#     thread = threading.Thread(target=image_thread, args=(message,))
-#     thread.start()
-# def image_thread(message: telebot.types.Message):
-#     """генерирует картинку по описанию"""
+@bot.message_handler(commands=['image','img','im','i'])
+def image(message: telebot.types.Message):
+    thread = threading.Thread(target=image_thread, args=(message,))
+    thread.start()
+def image_thread(message: telebot.types.Message):
+    """генерирует картинку по описанию"""
 
-#     # работаем только там где администратор включил
-#     if not activated_location(message):
-#         return
+    # работаем только там где администратор включил
+    if not activated_location(message):
+        return
 
-#     # не обрабатывать команды к другому боту /cmd@botname args
-#     if is_for_me(message.text)[0]: message.text = is_for_me(message.text)[1]
-#     else: return
+    # не обрабатывать команды к другому боту /cmd@botname args
+    if is_for_me(message.text)[0]: message.text = is_for_me(message.text)[1]
+    else: return
 
-#     chat_id_full = get_topic_id(message)
-#     if chat_id_full in GPT_CHAT_LOCKS:
-#         lock = GPT_CHAT_LOCKS[chat_id_full]
-#     else:
-#         lock = threading.Lock()
-#         GPT_CHAT_LOCKS[chat_id_full] = lock
-#     with lock:
+    chat_id_full = get_topic_id(message)
+    if chat_id_full in GPT_CHAT_LOCKS:
+        lock = GPT_CHAT_LOCKS[chat_id_full]
+    else:
+        lock = threading.Lock()
+        GPT_CHAT_LOCKS[chat_id_full] = lock
+    with lock:
 
-#         my_log.log_echo(message)
+        my_log.log_echo(message)
 
-#         with semaphore_talks:
-#             help = """/image <текстовое описание картинки, что надо нарисовать>
+        with semaphore_talks:
+            help = """/image <текстовое описание картинки, что надо нарисовать>
 
-#     Пример:
-#     `/image мишки на севере, ловят рыбу, рисунок карандашом`
-#     """
-#             prompt = message.text.split(maxsplit = 1)
-#             if len(prompt) > 1:
-#                 prompt = prompt[1]
-#                 # считаем что рисование тратит 16к символов, хотя на самом деле больше
-#                 if test_for_spam('Ж' * 16000, message.from_user.id):
-#                     bot.reply_to(message, 'Слишком много сообщений, попробуйте позже')
-#                     return
-#                 with ShowAction(message, 'upload_photo'):
-#                     images = my_genimg.gen_images(prompt)
-#                     if len(images) > 0:
-#                         medias = [telebot.types.InputMediaPhoto(i) for i in images]
-#                         bot.send_media_group(message.chat.id, medias, reply_to_message_id=message.message_id)
-#                         if pics_group:
-#                             try:
-#                                 bot.send_message(cfg.pics_group, prompt, disable_web_page_preview = True)
-#                                 bot.send_media_group(pics_group, medias)
-#                             except Exception as error2:
-#                                 print(f'tb:image: {error2}')
-#                                 my_log.log2(f'tb:image: {error2}')
+    Пример:
+    `/image мишки на севере, ловят рыбу, рисунок карандашом`
+    """
+            prompt = message.text.split(maxsplit = 1)
+            if len(prompt) > 1:
+                prompt = prompt[1]
+                # считаем что рисование тратит 16к символов, хотя на самом деле больше
+                if test_for_spam('Ж' * 16000, message.from_user.id):
+                    bot.reply_to(message, 'Слишком много сообщений, попробуйте позже')
+                    return
+                with ShowAction(message, 'upload_photo'):
+                    images = my_genimg.gen_images(prompt)
+                    if len(images) > 0:
+                        medias = [telebot.types.InputMediaPhoto(i) for i in images]
+                        bot.send_media_group(message.chat.id, medias, reply_to_message_id=message.message_id)
 
-#                         my_log.log_echo(message, '[image gen] ')
+                        my_log.log_echo(message, '[image gen] ')
 
-#                         # сохранить в отчет вопрос и ответ для юзера, и там же сохранение в группу
-#                         my_log.log_report(bot, message, chat_id_full, message.from_user.id, f'/image {prompt}', '\n'.join(images))
+                        # сохранить в отчет вопрос и ответ для юзера, и там же сохранение в группу
+                        my_log.log_report(bot, message, chat_id_full, message.from_user.id, f'/image {prompt}', '\n'.join(images))
 
-#                         n = [{'role':'system', 'content':f'user попросил нарисовать\n{prompt}'}, {'role':'system', 'content':'assistant нарисовал с помощью DALL-E'}]
-#                         if chat_id_full in DIALOGS_DB:
-#                             DIALOGS_DB[chat_id_full] += n
-#                         else:
-#                             DIALOGS_DB[chat_id_full] = n
+                        n = [{'role':'system', 'content':f'user попросил нарисовать\n{prompt}'}, {'role':'system', 'content':'assistant нарисовал с помощью DALL-E'}]
+                        if chat_id_full in DIALOGS_DB:
+                            DIALOGS_DB[chat_id_full] += n
+                        else:
+                            DIALOGS_DB[chat_id_full] = n
                         
-#                     else:
-#                         bot.reply_to(message, 'Не смог ничего нарисовать. Может настроения нет, а может надо другое описание дать.')
-#                         my_log.log_echo(message, '[image gen error] ')
-#                         my_log.log_report(bot, message, chat_id_full, message.from_user.id, f'/image {prompt}', 'Не смог ничего нарисовать. Может настроения нет, а может надо другое описание дать.')
-#                         n = [{'role':'system', 'content':f'user попросил нарисовать\n{prompt}'}, {'role':'system', 'content':'assistant не захотел или не смог нарисовать это с помощью DALL-E'}]
-#                         if chat_id_full in DIALOGS_DB:
-#                             DIALOGS_DB[chat_id_full] += n
-#                         else:
-#                             DIALOGS_DB[chat_id_full] = n
-#             else:
-#                 bot.reply_to(message, help, parse_mode = 'Markdown')
-#                 my_log.log_echo(message, help)
+                    else:
+                        bot.reply_to(message, 'Не смог ничего нарисовать. Может настроения нет, а может надо другое описание дать.')
+                        my_log.log_echo(message, '[image gen error] ')
+                        my_log.log_report(bot, message, chat_id_full, message.from_user.id, f'/image {prompt}', 'Не смог ничего нарисовать. Может настроения нет, а может надо другое описание дать.')
+                        n = [{'role':'system', 'content':f'user попросил нарисовать\n{prompt}'}, {'role':'system', 'content':'assistant не захотел или не смог нарисовать это с помощью DALL-E'}]
+                        if chat_id_full in DIALOGS_DB:
+                            DIALOGS_DB[chat_id_full] += n
+                        else:
+                            DIALOGS_DB[chat_id_full] = n
+            else:
+                bot.reply_to(message, help, parse_mode = 'Markdown')
+                my_log.log_echo(message, help)
 
 
 @bot.message_handler(commands=['sum'])
@@ -1477,6 +1470,12 @@ def do_task(message, custom_prompt: str = ''):
         # по умолчанию отвечает chatGPT
         if chat_id_full not in CHAT_MODE:
             CHAT_MODE[chat_id_full] = 'chatGPT'
+
+        # команда для рисования
+        if msg.strip().startswith('нарисуй'):
+            message.text = '/image ' + message.text.split(maxsplit=1)[1]
+            image_thread(message)
+            return
 
         # можно перенаправить запрос к гуглу или если режим perplexity/google
         if CHAT_MODE[chat_id_full] == 'perplexity' or msg.startswith(tuple(cfg.search_commands)):
