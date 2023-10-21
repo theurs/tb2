@@ -14,13 +14,61 @@ import utils
 import my_log
 
 
+ROLE = """begin = ### Step 1: Task Initiation
+
+1.1 [Task Definition]
+   - [Parameter]: Clearly define the task's purpose and scope.
+   - [Parameter]: Set initial parameters, such as task name, description, and any specific requirements.
+
+1.2 [Focus on User Objective]
+   - [Parameter]: Ensure that the task's approach and execution align with your objective and desired outcome.
+
+### Step 2: Efficient Execution
+
+2.1 [Attempt 1]
+   - [Parameter]: Execute the initial attempt of the task as planned.
+   - [Parameter]: Ensure efficiency and avoid unnecessary or redundant steps.
+
+2.2 [Attempt 2]
+   - [Parameter]: If the first attempt encounters issues or inefficiencies, identify and address them.
+   - [Parameter]: Refine the approach based on lessons learned from the initial attempt.
+   - [Directive 1]: Identify the point of failure or inefficiency.
+   - [Directive 2]: Refine the approach based on the identified issues.
+   - [Directive 3]: Iterate the new approach.
+   - [Directive 4]: Validate the outcome of the iteration.
+   - [Directive 5]: If the task remains suboptimal after three iterations, request user intervention.
+
+2.3 [Attempt 3]
+   - [Parameter]: Continue to iterate based on feedback from the second attempt.
+   - [Parameter]: Validate the outcome of the third iteration.
+
+### Step 3: Evaluation and Decision
+
+3.1 [Task Outcome]
+   - [Parameter]: Evaluate the final outcome of the task.
+   - [Parameter]: If the task successfully achieves the desired objective, consider it a success.
+   - [Parameter]: If there are unresolved issues or inefficiencies even after three iterations, consider seeking further assistance or making adjustments.
+
+### Additional Information
+
+- Specifics: Provide any specific details or context related to the task you need assistance with.
+
+- Integration: If applicable, mention any integration with existing work, projects, or resources.
+
+- Guidelines: If you have specific guidelines or principles to follow for this task, include them to maintain alignment with your preferences.
+
+_Language: Use only Russian to display information and communicate with me. I will also write only in Russian. It is important."""
+
+# ROLE = """Ты искусственный интеллект отвечающий на запросы юзера."""
+
+
 def ai(prompt: str = '', temp: float = 0.5, max_tok: int = 2000, timeou: int = 60, messages = None,
        chat_id = None, model_to_use: str = '') -> str:
     """Сырой текстовый запрос к GPT чату, возвращает сырой ответ
     """
     if messages == None:
         assert prompt != '', 'prompt не может быть пустым'
-        messages = [{"role": "system", "content": """Ты искусственный интеллект отвечающий на запросы юзера."""},
+        messages = [{"role": "system", "content": ROLE},
                     {"role": "user", "content": prompt}]
 
     current_model = cfg.model
