@@ -1056,8 +1056,8 @@ def image_thread(message: telebot.types.Message):
             prompt = message.text.split(maxsplit = 1)
             if len(prompt) > 1:
                 prompt = prompt[1]
-                # считаем что рисование тратит 16к символов, хотя на самом деле больше
-                if test_for_spam('Ж' * 16000, message.from_user.id):
+                # считаем что рисование тратит 4к символов, хотя на самом деле больше
+                if test_for_spam('Ж' * 4 * 1024, message.from_user.id):
                     bot.reply_to(message, 'Слишком много сообщений, попробуйте позже')
                     return
                 with ShowAction(message, 'upload_photo'):
