@@ -96,6 +96,8 @@ def ai(prompt: str = '', temp: float = 0.5, max_tok: int = 2000, timeou: int = 6
                 timeout=timeou
             )
             response = completion.choices[0].message.content
+            if 'Rate limit exceeded' in response or 'You exceeded your current quota, please check your plan and billing details.' in response:
+                response = ''
             if response:
                 break
         except Exception as unknown_error1:
