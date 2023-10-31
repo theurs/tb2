@@ -188,8 +188,39 @@ def bot_markdown_to_html(text: str) -> str:
         new_match = match
         text = text.replace(random_string, f'<code>{new_match}</code>')
 
+    text = replace_code_lang(text)
+
     text = replace_tables(text)
+
     return text
+
+
+def replace_code_lang(t: str) -> str:
+    """
+    Replaces the code language in the given string with appropriate HTML tags.
+
+    Parameters:
+        t (str): The input string containing code snippets.
+
+    Returns:
+        str: The modified string with code snippets wrapped in HTML tags.
+    """
+    result = ''
+    state = 0
+    for i in t.split('\n'):
+        if i.startswith('<code>') and len(i) > 7:
+            result += f'<pre><code class = "language-{i[6:]}">'
+            state = 1
+        else:
+            if state == 1:
+                if i == '</code>':
+                    result += '</code></pre>'
+                    state = 0
+                else:
+                    result += i + '\n'
+            else:
+                result += i + '\n'
+    return result
 
 
 def split_html(text: str, max_length: int = 1500) -> list:
@@ -234,8 +265,8 @@ def split_html(text: str, max_length: int = 1500) -> list:
 
         b_tags = chunk.count('<b>')
         b_close_tags = chunk.count('</b>')
-        code_tags = chunk.count('<code>')
-        code_close_tags = chunk.count('</code>')
+        code_tags = chunk.count('<pre>')
+        code_close_tags = chunk.count('</pre>')
 
         if b_tags > b_close_tags:
             chunk += '</b>'
@@ -245,17 +276,18 @@ def split_html(text: str, max_length: int = 1500) -> list:
             next_chunk_is_b = False
 
         if code_tags > code_close_tags:
-            chunk += '</code>'
+            chunk += '</pre>'
             next_chunk_is_code = True
         elif code_tags < code_close_tags:
-            chunk = '<code>' + chunk
+            chunk = '<pre>' + chunk
             next_chunk_is_code = False
+
 
         # если нет открывающих и закрывающих тегов <code> а в предыдущем чанке 
         # был добавлен закрывающий тег значит этот чанк целиком - код
         if code_close_tags == 0 and code_tags == 0 and next_chunk_is_code:
-            chunk = '<code>' + chunk
-            chunk += '</code>'
+            chunk = '<pre>' + chunk
+            chunk += '</pre>'
 
         # если нет открывающих и закрывающих тегов <b> а в предыдущем чанке 
         # был добавлен закрывающий тег значит этот чанк целиком - <b>
