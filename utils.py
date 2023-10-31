@@ -186,7 +186,13 @@ def bot_markdown_to_html(text: str) -> str:
     # меняем обратно хеши на блоки кода
     for match, random_string in list_of_code_blocks:
         new_match = match
-        text = text.replace(random_string, f'<code>{new_match}</code>')
+        language = new_match.split('\n')[0]
+        body = '\n'.join(new_match.split('\n')[1:])
+        # text = text.replace(random_string, f'<code>{new_match}</code>')
+        if language:
+            text = text.replace(random_string, f'<pre><code class = "language-{language}">{body}</code></pre>')
+        else:
+            text = text.replace(random_string, f'<pre><code>{body}</code></pre>')
 
     text = replace_tables(text)
     return text
@@ -263,6 +269,12 @@ def split_html(text: str, max_length: int = 1500) -> list:
             chunk = '<b>' + chunk
             chunk += '</b>'
 
+        if chunk.startswith('<code>') and not chunk.endswith('</code>'):
+            chunk = chunk[6:]
+        if chunk.startswith('<b>') and not chunk.endswith('</b>'):
+            chunk = chunk[3:]
+        chunks2.append(chunk)
+
         chunks2.append(chunk)
 
     return chunks2
@@ -330,14 +342,7 @@ def replace_tables(text: str) -> str:
 
 
 if __name__ == '__main__':
-    text = """
-Вот таблица с произвольными данными в 4 столбца и 5 строк:
-
-|St1|St2|St888888888888888888888888 88888888888888888888883|St4|
-|-|-|-|-|
-|12|64|32|55|
-|77|22|45|1000000000000000 0000000000000000000000000000009|
-|33|14|76|40|
-|50|27|16|73|
-|9|81|94|62|"""
-    print(replace_tables(text))
+    text = """```
+print('Hello') # Hello
+```"""
+    print(bot_markdown_to_html(text))
