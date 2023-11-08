@@ -10,7 +10,7 @@ fake_useragent
 fuzzywuzzy
 google
 langdetect
-openai
+openai==0.28.0
 openpyxl
 pandas
 prettytable
