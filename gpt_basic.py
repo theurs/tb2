@@ -634,8 +634,8 @@ if __name__ == '__main__':
 
     # print(moderation('я тебя убью'))
 
-    for x in range(5, 15):
-       print(ai(f'1+{x}='))
+    # for x in range(5, 15):
+    #    print(ai(f'1+{x}='))
 
-    # print(image_gen('большой бадабум'))
+    print(image_gen('большой бадабум'))
     # print(get_list_of_models())
