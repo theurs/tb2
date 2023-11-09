@@ -1061,7 +1061,16 @@ def image_thread(message: telebot.types.Message):
                     bot.reply_to(message, 'Слишком много сообщений, попробуйте позже')
                     return
                 with ShowAction(message, 'upload_photo'):
-                    images = my_genimg.gen_images(prompt)
+
+                    prompt_tr = ''
+                    try:
+                        prompt_tr = gpt_basic.ai_instruct(f'Translate into english: {prompt}')
+                    except Exception as image_prompt_translate:
+                        my_log.log2(f'image:translate_prompt: {str(image_prompt_translate)}\n\n{prompt}')
+                    if not prompt_tr:
+                        prompt_tr = prompt
+
+                    images = my_genimg.gen_images(prompt_tr)
                     if len(images) > 0:
                         medias = [telebot.types.InputMediaPhoto(i) for i in images]
                         bot.send_media_group(message.chat.id, medias,

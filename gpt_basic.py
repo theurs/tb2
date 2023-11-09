@@ -118,6 +118,51 @@ def ai(prompt: str = '', temp: float = 0.5, max_tok: int = 2000, timeou: int = 6
     return check_and_fix_text(response)
 
 
+def ai_instruct(prompt: str = '', temp: float = 0.1, max_tok: int = 2000, timeou: int = 120,
+       model_to_use: str = 'gpt-3.5-turbo-instruct') -> str:
+    """Сырой текстовый запрос к GPT чату, возвращает сырой ответ, для моделей instruct
+    """
+
+    assert prompt != '', 'prompt не может быть пустым'
+
+    current_model = model_to_use
+
+    response = ''
+
+    for server in cfg.openai_servers:
+        openai.api_base = server[0]
+        openai.api_key = server[1]
+
+        try:
+            # тут можно добавить степень творчества(бреда) от 0 до 2 дефолт - temperature = 1
+            completion = openai.Completion.create(
+                prompt = prompt,
+                model = current_model,
+                max_tokens=max_tok,
+                # temperature=temp,
+                timeout=timeou
+            )
+            response = completion["choices"][0]["text"]
+            if response:
+                break
+        except Exception as unknown_error1:
+            if str(unknown_error1).startswith('HTTP code 200 from API'):
+                    # ошибка парсера json?
+                    text = str(unknown_error1)[24:]
+                    lines = [x[6:] for x in text.split('\n') if x.startswith('data:') and ':{"content":"' in x]
+                    content = ''
+                    for line in lines:
+                        parsed_data = json.loads(line)
+                        content += parsed_data["choices"][0]["delta"]["content"]
+                    if content:
+                        response = content
+                        break
+            print(unknown_error1)
+            my_log.log2(f'gpt_basic.ai: {unknown_error1}\n\nServer: {openai.api_base}')
+
+    return check_and_fix_text(response)
+
+
 def ai_compress(prompt: str, max_prompt: int  = 300, origin: str = 'user', force: bool = False) -> str:
     """сжимает длинное сообщение в чате для того что бы экономить память в контексте
     origin - чье сообщение, юзера или это ответ помощника. 'user' или 'assistant'
