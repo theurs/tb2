@@ -494,7 +494,7 @@ def stt(audio_file: str) -> str:
     return json.loads(json.dumps(translation, ensure_ascii=False))['text']
 
 
-def image_gen(prompt: str, amount: int = 10, size: str = '1024x1024'):
+def image_gen(prompt: str, amount: int = 10, size: str ='1024x1024'):
     """
     Generates a specified number of images based on a given prompt.
 
@@ -515,11 +515,8 @@ def image_gen(prompt: str, amount: int = 10, size: str = '1024x1024'):
     assert amount <= 10, 'Too many images to gen'
     assert size in ('1024x1024','512x512','256x256'), 'Wrong image size'
 
-    # копируем и перемешиваем список серверов
-    shuffled_servers = servers[:]
-    random.shuffle(shuffled_servers)
-
-    for server in shuffled_servers:
+    results = []
+    for server in servers:
         openai.api_base = server[0]
         openai.api_key = server[1]
         try:
@@ -529,11 +526,32 @@ def image_gen(prompt: str, amount: int = 10, size: str = '1024x1024'):
                 size=size,
             )
             if response:
-                return [x['url'] for x in response["data"]]
+                results += [x['url'] for x in response["data"]]
+        except AttributeError:
+            pass
         except Exception as error:
             print(error)
             my_log.log2(f'gpt_basic:image_gen: {error}\n\nServer: {server[0]}')
-    return []
+        for model in ('DALL-E', 'kandinsky-2', 'kandinsky-2.2',
+                      'stable-diffusion-2.1', 'stable-diffusion 2.1',
+                      'midjourney'):
+            if len(results) >= amount:
+                break
+            try:
+                response = openai.Image.create(
+                    prompt = prompt,
+                    n = 1,
+                    size=size,
+                    model = model,
+                )
+                if response:
+                    results += [x['url'] for x in response["data"]]
+            except AttributeError:
+                pass
+            except Exception as error:
+                print(error)
+                my_log.log2(f'gpt_basic:image_gen: {error}\n\nServer: {server[0]}')
+    return results
 
 
 def get_list_of_models():
