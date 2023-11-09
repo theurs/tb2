@@ -1064,7 +1064,7 @@ def image_thread(message: telebot.types.Message):
 
                     prompt_tr = ''
                     try:
-                        prompt_tr = gpt_basic.ai_instruct(f'Translate into english: {prompt}')
+                        prompt_tr = gpt_basic.ai_instruct(f'Translate into english if it is not english, else leave it as it is: {prompt}')
                     except Exception as image_prompt_translate:
                         my_log.log2(f'image:translate_prompt: {str(image_prompt_translate)}\n\n{prompt}')
                     if not prompt_tr:
