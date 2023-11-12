@@ -1080,7 +1080,7 @@ def image_thread(message: telebot.types.Message):
                         # сохранить результат в галерее
                         if pics_group:
                             try:
-                                bot.send_message(cfg.pics_group, prompt, disable_web_page_preview = True)
+                                bot.send_message(cfg.pics_group, f'{prompt}\n\n[{prompt_tr}]', disable_web_page_preview = True)
                                 bot.send_media_group(pics_group, medias)
                             except Exception as error2:
                                 print(error2)
