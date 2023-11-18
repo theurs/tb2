@@ -1062,21 +1062,7 @@ def image_thread(message: telebot.types.Message):
                     return
                 with ShowAction(message, 'upload_photo'):
 
-                    prompt_tr = ''
-                    try:
-                        prompt_tr = gpt_basic.ai_instruct(f'Translate into english if it is not english, else leave it as it is: {prompt}')
-                    except Exception as image_prompt_translate:
-                        my_log.log2(f'image:translate_prompt: {str(image_prompt_translate)}\n\n{prompt}')
-                    prompt_tr = prompt_tr.strip()
-                    if not prompt_tr:
-                        try:
-                            prompt_tr = my_trans.translate(prompt, 'en')
-                        except Exception as google_translate_error:
-                            my_log.log2(f'image:translate_prompt:google_translate: {str(google_translate_error)}\n\n{prompt}')
-                        if not prompt_tr:
-                            prompt_tr = prompt
-
-                    images = my_genimg.gen_images(prompt_tr)
+                    images = my_genimg.gen_images(prompt)
                     if len(images) > 0:
                         medias = [telebot.types.InputMediaPhoto(i) for i in images]
                         bot.send_media_group(message.chat.id, medias,
@@ -1086,7 +1072,7 @@ def image_thread(message: telebot.types.Message):
                         # сохранить результат в галерее
                         if pics_group:
                             try:
-                                bot.send_message(cfg.pics_group, f'{prompt}\n\n[{prompt_tr}]', disable_web_page_preview = True)
+                                bot.send_message(cfg.pics_group, f'{prompt}', disable_web_page_preview = True)
                                 bot.send_media_group(pics_group, medias)
                             except Exception as error2:
                                 print(error2)
