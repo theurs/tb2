@@ -12,6 +12,7 @@ import openai
 import cfg
 import utils
 import my_log
+import my_trans
 
 
 ROLE = """begin = ### Step 1: Task Initiation
@@ -512,6 +513,20 @@ def image_gen(prompt: str, amount: int = 10, size: str ='1024x1024'):
 
     assert len(servers) > 0, 'No openai servers with image_gen=True configured'
 
+    prompt_tr = ''
+    try:
+        prompt_tr = ai_instruct(f'Translate into english if it is not english, else leave it as it is: {prompt}')
+    except Exception as image_prompt_translate:
+        my_log.log2(f'gpt_basic:image_gen:translate_prompt: {str(image_prompt_translate)}\n\n{prompt}')
+    prompt_tr = prompt_tr.strip()
+    if not prompt_tr:
+        try:
+            prompt_tr = my_trans.translate(prompt, 'en')
+        except Exception as google_translate_error:
+            my_log.log2(f'gpt_basic:image_gen:translate_prompt:google_translate: {str(google_translate_error)}\n\n{prompt}')
+        if not prompt_tr:
+            prompt_tr = prompt
+
     assert amount <= 10, 'Too many images to gen'
     assert size in ('1024x1024','512x512','256x256'), 'Wrong image size'
 
@@ -521,7 +536,7 @@ def image_gen(prompt: str, amount: int = 10, size: str ='1024x1024'):
         openai.api_key = server[1]
         try:
             response = openai.Image.create(
-                prompt = prompt,
+                prompt = prompt_tr,
                 n = amount,
                 size=size,
             )
