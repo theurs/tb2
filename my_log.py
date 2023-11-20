@@ -182,9 +182,13 @@ def log_report(bot: telebot.TeleBot, message: telebot.types.Message,
         user_thread = bot.create_forum_topic(logs_group, user_id_with_name).message_thread_id
         USERS_LOGS[user_id] = user_thread
 
-        bot.send_message(logs_group, message_thread_id=user_thread, text = f'USER: {user_text[:3500]}')
-        time.sleep(1)
-        bot.send_message(logs_group, message_thread_id=user_thread, text = f'BOT: {resp}', parse_mode=parse_mode)
+        try:
+            bot.send_message(logs_group, message_thread_id=user_thread, text = f'USER: {user_text[:3500]}')
+            time.sleep(1)
+            bot.send_message(logs_group, message_thread_id=user_thread, text = f'BOT: {resp}', parse_mode=parse_mode)
+        except Exception as error2:
+            print(f'my_log:log_report:2: {error}')
+            log2(f'my_log:log_report:2: {error}')
 
 
 if __name__ == '__main__':
