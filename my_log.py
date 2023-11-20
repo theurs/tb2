@@ -3,6 +3,7 @@
 
 import os
 import datetime
+import html
 import threading
 import time
 
@@ -183,9 +184,9 @@ def log_report(bot: telebot.TeleBot, message: telebot.types.Message,
         USERS_LOGS[user_id] = user_thread
 
         try:
-            bot.send_message(logs_group, message_thread_id=user_thread, text = f'USER: {user_text[:3500]}')
+            bot.send_message(logs_group, message_thread_id=user_thread, text = html.escape(f'USER: {user_text[:3500]}'))
             time.sleep(1)
-            bot.send_message(logs_group, message_thread_id=user_thread, text = f'BOT: {resp}', parse_mode=parse_mode)
+            bot.send_message(logs_group, message_thread_id=user_thread, text = html.escape(f'BOT: {resp}'), parse_mode=parse_mode)
         except Exception as error2:
             print(f'my_log:log_report:2: {error}')
             log2(f'my_log:log_report:2: {error}')
