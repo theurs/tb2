@@ -1446,6 +1446,16 @@ def do_task(message, custom_prompt: str = ''):
         # является ли это ответом на сообщение бота
         is_reply = message.reply_to_message and message.reply_to_message.from_user.id == BOT_ID
 
+        # проверяем нет ли запрещенных слов
+        letters = re.compile('[^а-яА-ЯёЁa-zA-Z0-9\'\`\$\_\-\{\}\[\]\<\>\@\*\|\s]')
+        msg2 = letters.sub(' ', msg)
+        # и разбиваем текст на слова
+        words_in_msg2 = [x.strip() for x in msg2.split()]
+        for x in words_in_msg2:
+            if any(fuzz.ratio(x, keyword) > 90 for keyword in STOP_WORDS):
+                # сообщить администратору о нарушителе
+                send_message_to_admin(message, x, [keyword for keyword in STOP_WORDS if fuzz.ratio(x, keyword) > 90])
+
         # не отвечать если это ответ юзера другому юзеру
         try:
             _ = message.dont_check_topic
@@ -1468,31 +1478,6 @@ def do_task(message, custom_prompt: str = ''):
         if msg.startswith(BOT_NAME):
             message.text = message.text.split(maxsplit = 1)[1]
             msg = message.text.lower()
-
-        # если есть запрещенный в opanai контент
-        # try:
-        #     moderation_result = gpt_basic.moderation(message.text)
-        # except Exception as error:
-        #     print(f'tb:do_task:moderation: {error}')
-        #     my_log.log2(f'tb:do_task:moderation: {error}')
-        #     moderation_result = ''
-        # if moderation_result:
-        #     send_message_to_admin2(message, user_text, moderation_result)
-
-        # если есть совпадение в списке стоп слов
-        # удаляем все символы кроме букв
-        letters = re.compile('[^а-яА-ЯёЁa-zA-Z0-9\'\`\$\_\-\{\}\[\]\<\>\@\*\|\s]')
-        msg2 = letters.sub(' ', msg)
-        # и разбиваем текст на слова
-        words_in_msg2 = [x.strip() for x in msg2.split()]
-        for x in words_in_msg2:
-            if any(fuzz.ratio(x, keyword) > 90 for keyword in STOP_WORDS):
-                # сообщить администратору о нарушителе
-                send_message_to_admin(message, x, [keyword for keyword in STOP_WORDS if fuzz.ratio(x, keyword) > 90])
-        # for x in words_in_msg2:
-            # if x in STOP_WORDS:
-                # # сообщить администратору о нарушителе
-                # send_message_to_admin(message, x, [fuzz.ratio(x, keyword) > 80 for keyword in STOP_WORDS])
 
         # по умолчанию отвечает chatGPT
         if chat_id_full not in CHAT_MODE:
