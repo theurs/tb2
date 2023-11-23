@@ -1446,6 +1446,14 @@ def do_task(message, custom_prompt: str = ''):
         # является ли это ответом на сообщение бота
         is_reply = message.reply_to_message and message.reply_to_message.from_user.id == BOT_ID
 
+        # удаляем пробелы в конце каждой строки
+        message.text = "\n".join([line.rstrip() for line in message.text.split("\n")])
+        msg = message.text.lower()
+        # убираем имя бота из запроса
+        if msg.startswith(BOT_NAME):
+            message.text = message.text.split(maxsplit = 1)[1]
+            msg = message.text.lower()
+
         # проверяем нет ли запрещенных слов
         letters = re.compile('[^а-яА-ЯёЁa-zA-Z0-9\'\`\$\_\-\{\}\[\]\<\>\@\*\|\s]')
         msg2 = letters.sub(' ', msg)
@@ -1470,14 +1478,6 @@ def do_task(message, custom_prompt: str = ''):
                 # если это ответ в обычном чате но ответ не мне то выход
                 if message.reply_to_message and not is_reply:
                     return
-
-        # удаляем пробелы в конце каждой строки
-        message.text = "\n".join([line.rstrip() for line in message.text.split("\n")])
-        msg = message.text.lower()
-        # убираем имя бота из запроса
-        if msg.startswith(BOT_NAME):
-            message.text = message.text.split(maxsplit = 1)[1]
-            msg = message.text.lower()
 
         # по умолчанию отвечает chatGPT
         if chat_id_full not in CHAT_MODE:
