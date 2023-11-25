@@ -114,7 +114,10 @@ def ai(prompt: str = '', temp: float = 0.5, max_tok: int = 2000, timeou: int = 6
                         response = content
                         break
             print(unknown_error1)
-            my_log.log2(f'gpt_basic.ai: {unknown_error1}\n\nServer: {openai.api_base}')
+            my_log.log2(f'gpt_basic.ai: {unknown_error1}\n\nServer: {openai.api_base}\n\n{server[1]}')
+            if 'You exceeded your current quota, please check your plan and billing details' in str(unknown_error1):
+                # удалить отработавший ключ
+                cfg.openai_servers = [x for x in cfg.openai_servers if x[1] != server[1]]
 
     return check_and_fix_text(response)
 
