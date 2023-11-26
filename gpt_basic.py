@@ -553,25 +553,6 @@ def image_gen(prompt: str, amount: int = 10, size: str ='1024x1024'):
         except Exception as error:
             print(error)
             my_log.log2(f'gpt_basic:image_gen: {error}\n\nServer: {server[0]}')
-        for model in ('DALL-E', 'kandinsky-2', 'kandinsky-2.2',
-                      'stable-diffusion-2.1', 'stable-diffusion 2.1',
-                      'midjourney'):
-            if len(results) >= amount:
-                break
-            try:
-                response = openai.Image.create(
-                    prompt = prompt_tr,
-                    n = 1,
-                    size=size,
-                    model = model,
-                )
-                if response:
-                    results += [x['url'] for x in response["data"]]
-            except AttributeError:
-                pass
-            except Exception as error:
-                print(error)
-                my_log.log2(f'gpt_basic:image_gen: {error}\n\nServer: {server[0]}')
     return results
 
 
