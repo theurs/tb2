@@ -83,6 +83,9 @@ def ai(prompt: str = '', temp: float = 0.5, max_tok: int = 2000, timeou: int = 6
     shuffled_servers = cfg.openai_servers[:]
     random.shuffle(shuffled_servers)
 
+    # не использовать нагу для текстовых запросов
+    shuffled_servers = [x for x in shuffled_servers if 'api.naga.ac' not in x[0]]
+
     for server in shuffled_servers:
         openai.api_base = server[0]
         openai.api_key = server[1]
