@@ -1064,7 +1064,7 @@ def image_thread(message: telebot.types.Message):
 
                     images = my_genimg.gen_images(prompt)
                     if len(images) > 0:
-                        medias = [telebot.types.InputMediaPhoto(i) for i in images]
+                        medias = [telebot.types.InputMediaPhoto(i) for i in images if r'https://r.bing.com' not in i]
                         bot.send_media_group(message.chat.id, medias,
                                              reply_to_message_id=message.message_id,
                                              disable_notification=True)
