@@ -1572,9 +1572,9 @@ def do_task(message, custom_prompt: str = ''):
                     my_log.log2(f'tb:do_task: {error3}')
         # если активирован клод
         elif CHAT_MODE[chat_id_full] == 'claude':
-            if len(msg) > 199000:
-                bot.reply_to(message, f'Слишком длинное сообщение для Клода: {len(msg)} из {199000}')
-                my_log.log_echo(message, f'Слишком длинное сообщение для Клода: {len(msg)} из {199000}')
+            if len(msg) > my_claude.MAX_QUERY:
+                bot.reply_to(message, f'Слишком длинное сообщение для Клода: {len(msg)} из {my_claude.MAX_QUERY}')
+                my_log.log_echo(message, f'Слишком длинное сообщение для Клода: {len(msg)} из {my_claude.MAX_QUERY}')
                 return
             with ShowAction(message, 'typing'):
                 try:
