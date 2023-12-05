@@ -79,6 +79,11 @@ with open('stop_words.txt', 'w', encoding='utf-8') as f:
     f.write(','.join(STOP_WORDS))
 stop_words_lock = threading.Lock()
 
+# исключения из стоп слов
+STOP_WORDS_FALSE_POSITIVE = [
+    'кончая', 'ездишь', 'стирать', 
+]
+
 # защита от спама, временный бан юзера
 # {user_id: Spamer}
 SPAMERS = {}
@@ -1461,8 +1466,9 @@ def do_task(message, custom_prompt: str = ''):
         words_in_msg2 = [x.strip() for x in msg2.split()]
         for x in words_in_msg2:
             if any(fuzz.ratio(x, keyword) > 90 for keyword in STOP_WORDS):
-                # сообщить администратору о нарушителе
-                send_message_to_admin(message, x, [keyword for keyword in STOP_WORDS if fuzz.ratio(x, keyword) > 90])
+                if x not in STOP_WORDS_FALSE_POSITIVE:
+                    # сообщить администратору о нарушителе
+                    send_message_to_admin(message, x, [keyword for keyword in STOP_WORDS if fuzz.ratio(x, keyword) > 90])
 
         # не отвечать если это ответ юзера другому юзеру
         try:
