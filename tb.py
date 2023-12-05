@@ -1472,7 +1472,7 @@ def do_task(message, custom_prompt: str = ''):
         words_in_msg2 = [x.strip() for x in msg2.split()]
         for x in words_in_msg2:
             if any(fuzz.ratio(x, keyword) > 90 for keyword in STOP_WORDS):
-                if x not in STOP_WORDS_FALSE_POSITIVE:
+                if x not in STOP_WORDS_FALSE_POSITIVE or x in STOP_WORDS:
                     # сообщить администратору о нарушителе
                     send_message_to_admin(message, x, [keyword for keyword in STOP_WORDS if fuzz.ratio(x, keyword) > 90])
 
