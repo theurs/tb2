@@ -80,9 +80,15 @@ with open('stop_words.txt', 'w', encoding='utf-8') as f:
 stop_words_lock = threading.Lock()
 
 # исключения из стоп слов
-STOP_WORDS_FALSE_POSITIVE = [
-    'кончая', 'ездишь', 'стирать', 'посуда'
-]
+# STOP_WORDS_FALSE_POSITIVE = [
+#     'кончая', 'ездишь', 'стирать', 'посуда'
+# ]
+STOP_WORDS_FALSE_POSITIVE = []
+with open('russian.txt', 'r', encoding="cp1251") as f:
+    STOP_WORDS_FALSE_POSITIVE += [x.strip() for x in f.readlines()]
+with open('russian_surnames.txt', 'r', encoding="cp1251") as f:
+    STOP_WORDS_FALSE_POSITIVE += [x.strip() for x in f.readlines()]
+
 
 # защита от спама, временный бан юзера
 # {user_id: Spamer}
