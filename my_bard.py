@@ -18,7 +18,8 @@ DIALOGS = {}
 CHAT_LOCKS = {}
 
 # максимальный размер запроса который принимает бард, получен подбором
-MAX_REQUEST = 3100
+# MAX_REQUEST = 3100
+MAX_REQUEST = 14000
 
 
 # loop detector
