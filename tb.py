@@ -363,6 +363,8 @@ def is_admin_member(message: telebot.types.Message):
 
 def activated_location(message: telebot.types.Message) -> bool:
     """проверяет надо ли работать в этом чате, активировано ли администратором"""
+    if message.chat.id in cfg.admins:
+        return True
     chat_id_full = get_topic_id(message)
     if chat_id_full in SUPER_CHAT and SUPER_CHAT[chat_id_full]:
         return True
