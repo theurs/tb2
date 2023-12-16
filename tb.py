@@ -1445,6 +1445,17 @@ def do_task(message, custom_prompt: str = ''):
         return
 
 
+    # если админ прислал новые куки для бинга
+    if message.chat.id in cfg.admins:
+        if '"name": "_U",' in message.text:
+            if '"domain": ".bing.com",' in message.text:
+                if '"value": "' in message.text:
+                    if len(message.text) > 10000:
+                        open('cookies.json', 'w').write(message.text)
+                        reply_to_long_message(message, "Куки файл обновлен.")
+                        return
+
+
     with semaphore_talks:
 
         my_log.log_echo(message)
