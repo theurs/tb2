@@ -488,6 +488,8 @@ def handle_photo_thread(message: telebot.types.Message):
 
     my_log.log_media(message)
 
+    global DIALOGS_DB
+
     # работаем только там где администратор включил
     if not activated_location(message):
         return
