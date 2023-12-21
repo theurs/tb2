@@ -1436,7 +1436,6 @@ def test_for_spam(text: str, user_id: int) -> bool:
 
 def get_history_of_chat(chat_id_full: str) -> str:
     """возвращает историю диалога, надо что бы посчитать размер текста для проверки на спам"""
-    chat_id_full = get_topic_id(message)
     if chat_id_full not in CHAT_MODE:
         return ''
 
