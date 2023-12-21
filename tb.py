@@ -825,29 +825,32 @@ def export_data_thread(message: telebot.types.Message):
                 matches = pattern.findall(text)
                 sep2 = '-' * 40
                 for match in matches:
-                    text2 = match.strip()
-                    lines2 = text2.splitlines()
-                    _user = x.split('.', maxsplit=1)[0].split('/', maxsplit=1)[1]
-                    _date_in_seconds = pd.to_datetime(float(lines2[0]), unit='s')                    
-                    _date_and_time = lines2[1]
-                    _chat_id_full = lines2[2]
-                    lines2[2] = lines2[2].replace('[', '').replace(']', '')
-                    _chat_id, _thread_id = lines2[2].split(' ')
-                    _user_request = ''
-                    _bot_response = ''
-                    stage = 0
-                    for l in lines2[4:]:
-                        if l == sep2:
-                            stage += 1
-                            continue
-                        if stage == 0:
-                            _user_request += l + '\n'
-                        else:
-                            _bot_response += l + '\n'
-                    _user_request = _user_request.strip()
-                    _bot_response = _bot_response.strip()
-                    _record = (_chat_id_full, _user, _date_and_time, _user_request, _bot_response, _date_in_seconds, _chat_id, _thread_id)
-                    data.append(_record)
+                    try:
+                        text2 = match.strip()
+                        lines2 = text2.splitlines()
+                        _user = x.split('.', maxsplit=1)[0].split('/', maxsplit=1)[1]
+                        _date_in_seconds = pd.to_datetime(float(lines2[0]), unit='s')
+                        _date_and_time = lines2[1]
+                        _chat_id_full = lines2[2]
+                        lines2[2] = lines2[2].replace('[', '').replace(']', '')
+                        _chat_id, _thread_id = lines2[2].split(' ')
+                        _user_request = ''
+                        _bot_response = ''
+                        stage = 0
+                        for l in lines2[4:]:
+                            if l == sep2:
+                                stage += 1
+                                continue
+                            if stage == 0:
+                                _user_request += l + '\n'
+                            else:
+                                _bot_response += l + '\n'
+                        _user_request = _user_request.strip()
+                        _bot_response = _bot_response.strip()
+                        _record = (_chat_id_full, _user, _date_and_time, _user_request, _bot_response, _date_in_seconds, _chat_id, _thread_id)
+                        data.append(_record)
+                    except Exception as error:
+                        my_log.log2(f'tb:export_data_thread: {error}')
 
         # Создаем DataFrame из списка строк.
         df = pd.DataFrame(data)
