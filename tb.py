@@ -18,6 +18,7 @@ import cfg
 import gpt_basic
 import my_bard
 import my_claude
+import my_gemini
 import my_genimg
 import my_dic
 import my_google
@@ -1698,6 +1699,7 @@ def main():
     Runs the main function, which sets default commands and starts polling the bot.
     """
     #set_default_commands()
+    my_gemini.load_memory_from_file()
     bot.polling(timeout=90, long_polling_timeout = 90)
 
 
