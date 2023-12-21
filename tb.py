@@ -582,9 +582,13 @@ def send_debug_history(message: telebot.types.Message):
             messages = DIALOGS_DB[chat_id_full]
         prompt = '\n'.join(f'{i["role"]} - {i["content"]}\n' for i in messages) or 'Пусто'
         my_log.log_echo(message, prompt)
+        if not prompt:
+            prompt = 'Пусто'
         reply_to_long_message(message, prompt, parse_mode = '', disable_web_page_preview = True)
     elif CHAT_MODE[chat_id_full] == 'gemini':
         prompt = my_gemini.get_mem_as_string(chat_id_full)
+        if not prompt:
+            prompt = 'Пусто'
         my_log.log_echo(message, prompt)
         reply_to_long_message(message, prompt, parse_mode = '', disable_web_page_preview = True)
 
