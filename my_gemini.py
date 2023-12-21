@@ -203,9 +203,14 @@ def ai(q: str, mem = [], temperature: float = 0.1) -> str:
 
     keys = cfg.gemini_keys[:]
     random.shuffle(keys)
+    proxy = "http://172.28.1.5:3128"
+    session = requests.Session()
+    session.proxies = {"http": proxy, "https": proxy}
+    
     for key in keys:
         url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + key
-        response = requests.post(url, json=mem_, timeout=60)
+        # response = requests.post(url, json=mem_, timeout=60)
+        response = session.post(url, json=mem_, timeout=60)
         if response.status_code == 200:
             break
 

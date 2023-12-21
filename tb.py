@@ -573,13 +573,20 @@ def send_debug_history(message: telebot.types.Message):
     
     chat_id_full = get_topic_id(message)
 
-    # создаем новую историю диалогов с юзером из старой если есть
-    messages = []
-    if chat_id_full in DIALOGS_DB:
-        messages = DIALOGS_DB[chat_id_full]
-    prompt = '\n'.join(f'{i["role"]} - {i["content"]}\n' for i in messages) or 'Пусто'
-    my_log.log_echo(message, prompt)
-    reply_to_long_message(message, prompt, parse_mode = '', disable_web_page_preview = True)
+    if chat_id_full not in CHAT_MODE:
+        return
+    if CHAT_MODE[chat_id_full] == 'chatGPT':
+        # создаем новую историю диалогов с юзером из старой если есть
+        messages = []
+        if chat_id_full in DIALOGS_DB:
+            messages = DIALOGS_DB[chat_id_full]
+        prompt = '\n'.join(f'{i["role"]} - {i["content"]}\n' for i in messages) or 'Пусто'
+        my_log.log_echo(message, prompt)
+        reply_to_long_message(message, prompt, parse_mode = '', disable_web_page_preview = True)
+    elif CHAT_MODE[chat_id_full] == 'gemini':
+        prompt = my_gemini.get_mem_as_string(chat_id_full)
+        my_log.log_echo(message, prompt)
+        reply_to_long_message(message, prompt, parse_mode = '', disable_web_page_preview = True)
 
 
 @bot.message_handler(commands=['bard'])
@@ -637,6 +644,17 @@ def claudemode(message: telebot.types.Message):
         chat_id_full = get_topic_id(message)
         CHAT_MODE[chat_id_full] = 'claude'
         bot.reply_to(message, 'Теперь бот отвечает как Claude Anthropic в этой теме/чате')
+    else:
+        bot.reply_to(message, 'Эта команда только для администраторов')
+
+
+@bot.message_handler(commands=['geminimode'])
+def geminimode(message: telebot.types.Message):
+    """включить работу bard в этой теме/чате"""
+    if is_admin_member(message):
+        chat_id_full = get_topic_id(message)
+        CHAT_MODE[chat_id_full] = 'gemini'
+        bot.reply_to(message, 'Теперь бот отвечает как Gemini Pro в этой теме/чате')
     else:
         bot.reply_to(message, 'Эта команда только для администраторов')
 
@@ -843,16 +861,20 @@ def clear_thread(message: telebot.types.Message):
     user_id = message.from_user.id
     if chat_id_full in CHAT_MODE and CHAT_MODE[chat_id_full] == 'bard':
         my_bard.reset_bard_chat(chat_id_full)
-        my_log.log_echo(message, 'История Google Bard принудительно отчищена')
-        my_log.log_report(bot, message, chat_id_full, user_id, 'забудь', 'История Google Bard принудительно отчищена')
+        my_log.log_echo(message, 'История Google Bard принудительно очищена')
+        my_log.log_report(bot, message, chat_id_full, user_id, 'забудь', 'История Google Bard принудительно очищена')
     elif chat_id_full in CHAT_MODE and CHAT_MODE[chat_id_full] == 'chatGPT':
         DIALOGS_DB[chat_id_full] = []
-        my_log.log_echo(message, 'История chatGPT принудительно отчищена')
-        my_log.log_report(bot, message, chat_id_full, user_id, 'забудь', 'История chatGPT принудительно отчищена')
+        my_log.log_echo(message, 'История chatGPT принудительно очищена')
+        my_log.log_report(bot, message, chat_id_full, user_id, 'забудь', 'История chatGPT принудительно очищена')
     elif chat_id_full in CHAT_MODE and CHAT_MODE[chat_id_full] == 'claude':
         my_claude.reset_claude_chat(chat_id_full)
-        my_log.log_echo(message, 'История claude принудительно отчищена')
-        my_log.log_report(bot, message, chat_id_full, user_id, 'забудь', 'История claude принудительно отчищена')
+        my_log.log_echo(message, 'История claude принудительно очищена')
+        my_log.log_report(bot, message, chat_id_full, user_id, 'забудь', 'История claude принудительно очищена')
+    elif chat_id_full in CHAT_MODE and CHAT_MODE[chat_id_full] == 'gemini':
+        my_gemini.reset(chat_id_full)
+        my_log.log_echo(message, 'История gemini принудительно очищена')
+        my_log.log_report(bot, message, chat_id_full, user_id, 'забудь', 'История gemini принудительно очищена')
     bot.reply_to(message, 'Ок', parse_mode='Markdown')
 
 
@@ -1282,6 +1304,7 @@ def send_welcome_help(message: telebot.types.Message):
 
 /chatgptmode - в этом чате будет отвечать ChatGPT
 /bardmode - в этом чате будет отвечать Google Bard
+/geminimode - в этом чате будет отвечать Google Bard
 /claudemode - в этом чате будет отвечать Claude Anthropic
 /perplexitymode - в этом чате будет отвечать Perplexity или Google, ответы будут браться из интернета
 
@@ -1394,21 +1417,30 @@ def test_for_spam(text: str, user_id: int) -> bool:
 
 def get_history_of_chat(chat_id_full: str) -> str:
     """возвращает историю диалога, надо что бы посчитать размер текста для проверки на спам"""
-    messages = []
-    if chat_id_full in DIALOGS_DB:
-        messages = DIALOGS_DB[chat_id_full]
+    chat_id_full = get_topic_id(message)
+    if chat_id_full not in CHAT_MODE:
+        return ''
 
-    # теперь ее надо почистить что бы влезла в запрос к GPT
-    # просто удаляем все кроме max_hist_lines последних
-    if len(messages) > cfg.max_hist_lines:
-        messages = messages[cfg.max_hist_lines:]
-    # удаляем первую запись в истории до тех пор пока общее количество токенов не станет меньше cfg.max_hist_bytes
-    # удаляем по 2 сразу так как первая - промпт для бота
-    while (utils.count_tokens(messages) > cfg.max_hist_bytes):
-        messages = messages[2:]
+    if CHAT_MODE[chat_id_full] == 'gemini':
+        return my_gemini.get_mem_as_string(chat_id_full)
+    elif CHAT_MODE[chat_id_full] == 'chatGPT':
+        messages = []
+        if chat_id_full in DIALOGS_DB:
+            messages = DIALOGS_DB[chat_id_full]
 
-    prompt = '\n'.join(f'{i["role"]} - {i["content"]}\n' for i in messages) or 'Пусто'
-    return prompt
+        # теперь ее надо почистить что бы влезла в запрос к GPT
+        # просто удаляем все кроме max_hist_lines последних
+        if len(messages) > cfg.max_hist_lines:
+            messages = messages[cfg.max_hist_lines:]
+        # удаляем первую запись в истории до тех пор пока общее количество токенов не станет меньше cfg.max_hist_bytes
+        # удаляем по 2 сразу так как первая - промпт для бота
+        while (utils.count_tokens(messages) > cfg.max_hist_bytes):
+            messages = messages[2:]
+
+        prompt = '\n'.join(f'{i["role"]} - {i["content"]}\n' for i in messages) or 'Пусто'
+        return prompt
+    else:
+        return ''
 
 
 @bot.message_handler(func=lambda message: True)
@@ -1579,7 +1611,7 @@ def do_task(message, custom_prompt: str = ''):
                     answer = utils.bot_markdown_to_html(answer)
                     my_log.log_echo(message, answer)
                     if answer:
-                        answer += '\n\n[Google Bard]'
+                        answer += '\n[Google Bard]'
                         try:
                             reply_to_long_message(message, answer, parse_mode='HTML', disable_web_page_preview = True, 
                                                     reply_markup=get_keyboard('chat', message))
@@ -1596,6 +1628,38 @@ def do_task(message, custom_prompt: str = ''):
                 except Exception as error3:
                     print(f'tb:do_task: {error3}')
                     my_log.log2(f'tb:do_task: {error3}')
+
+        # если активирован gemini
+        elif CHAT_MODE[chat_id_full] == 'gemini':
+            if len(msg) > my_gemini.MAX_REQUEST:
+                bot.reply_to(message, f'Слишком длинное сообщение для барда: {len(msg)} из {my_gemini.MAX_REQUEST}')
+                my_log.log_echo(message, f'Слишком длинное сообщение для барда: {len(msg)} из {my_gemini.MAX_REQUEST}')
+                return
+
+            with ShowAction(message, 'typing'):
+                try:
+                    answer = my_gemini.chat(message.text, chat_id_full)
+                    my_log.log_echo(message, answer)
+                    if answer:
+                        answer = utils.bot_markdown_to_html(answer)
+                        answer += '\n[Gemini Pro]'
+                        try:
+                            reply_to_long_message(message, answer, parse_mode='HTML', disable_web_page_preview = True, 
+                                                    reply_markup=get_keyboard('chat', message))
+                        except Exception as error:
+                            print(f'tb:do_task: {error}')
+                            my_log.log2(f'tb:do_task: {error}')
+                            reply_to_long_message(message, answer, parse_mode='', disable_web_page_preview = True, 
+                                                    reply_markup=get_keyboard('chat', message))
+                        my_log.log_report(bot, message, chat_id_full, user_id, user_text, answer, parse_mode='HTML')
+                    else:
+                        my_log.log_report(bot, message, chat_id_full, user_id, user_text, 'Gemini Pro не ответил', parse_mode='HTML')
+                        bot.reply_to(message, 'Gemini Pro не ответил')
+                except Exception as error3:
+                    print(f'tb:do_task: {error3}')
+                    my_log.log2(f'tb:do_task: {error3}')
+
+
         # если активирован клод
         elif CHAT_MODE[chat_id_full] == 'claude':
             if len(msg) > my_claude.MAX_QUERY:
@@ -1609,7 +1673,7 @@ def do_task(message, custom_prompt: str = ''):
                     answer = utils.bot_markdown_to_html(answer)
                     my_log.log_echo(message, answer)
                     if answer:
-                        answer += '\n\n[Claude Anthropic]'
+                        answer += '\n[Claude Anthropic]'
                         try:
                             reply_to_long_message(message, answer, parse_mode='HTML', disable_web_page_preview = True, 
                                                     reply_markup=get_keyboard('chat', message))
@@ -1648,7 +1712,7 @@ def do_task(message, custom_prompt: str = ''):
                 with lock:
                     resp = dialog_add_user_request(chat_id_full, message.text, 'gpt')
                     if resp:
-                        resp += '\n\n[chatGPT]'                        
+                        resp += '\n[chatGPT]'                        
                         # добавляем ответ счетчик юзера что бы детектить спам
                         test_for_spam(resp, user_id)
                         
