@@ -504,9 +504,9 @@ def handle_photo_thread(message: telebot.types.Message):
             photo = message.photo[-1]
             file_info = bot.get_file(photo.file_id)
             image = bot.download_file(file_info.file_path)
-            result = my_gemini.img2txt(image, 'Опиши подробно что нарисовано на картинке, так что бы человек понял что здесь изображено.')
+            result = my_gemini.img2txt(image, 'Опиши максимально подробно что нарисовано на картинке, так что бы человек понял что здесь изображено.')
             if not result:
-                result = my_bard.chat_image('Опиши подробно что нарисовано на картинке, так что бы человек понял что здесь изображено.', chat_id_full, image)
+                result = my_bard.chat_image('Опиши максимально подробно что нарисовано на картинке, так что бы человек понял что здесь изображено.', chat_id_full, image)
             result = utils.bot_markdown_to_html(result)
             reply_to_long_message(message, result, parse_mode='HTML',
                                   reply_markup=get_keyboard('chat', message))
