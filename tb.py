@@ -1631,7 +1631,8 @@ def do_task(message, custom_prompt: str = ''):
                     answer = utils.bot_markdown_to_html(answer)
                     my_log.log_echo(message, answer)
                     if answer:
-                        answer += '\n[Google Bard]'
+                        answer = answer.strip()
+                        answer += '\n\n[Google Bard]'
                         try:
                             reply_to_long_message(message, answer, parse_mode='HTML', disable_web_page_preview = True, 
                                                     reply_markup=get_keyboard('chat', message))
@@ -1662,7 +1663,8 @@ def do_task(message, custom_prompt: str = ''):
                     my_log.log_echo(message, answer)
                     if answer:
                         answer = utils.bot_markdown_to_html(answer)
-                        answer += '\n[Gemini Pro]'
+                        answer = answer.strip()
+                        answer += '\n\n[Gemini Pro]'
                         try:
                             reply_to_long_message(message, answer, parse_mode='HTML', disable_web_page_preview = True, 
                                                     reply_markup=get_keyboard('chat', message))
@@ -1693,7 +1695,8 @@ def do_task(message, custom_prompt: str = ''):
                     answer = utils.bot_markdown_to_html(answer)
                     my_log.log_echo(message, answer)
                     if answer:
-                        answer += '\n[Claude Anthropic]'
+                        answer = answer.strip()
+                        answer += '\n\n[Claude Anthropic]'
                         try:
                             reply_to_long_message(message, answer, parse_mode='HTML', disable_web_page_preview = True, 
                                                     reply_markup=get_keyboard('chat', message))
@@ -1732,7 +1735,8 @@ def do_task(message, custom_prompt: str = ''):
                 with lock:
                     resp = dialog_add_user_request(chat_id_full, message.text, 'gpt')
                     if resp:
-                        resp += '\n[chatGPT]'                        
+                        resp = resp.strip()
+                        resp += '\n\n[chatGPT]'                      
                         # добавляем ответ счетчик юзера что бы детектить спам
                         test_for_spam(resp, user_id)
                         
