@@ -507,13 +507,26 @@ def handle_photo_thread(message: telebot.types.Message):
             result = my_gemini.img2txt(image, 'Опиши максимально подробно что нарисовано на картинке, так что бы человек понял что здесь изображено.')
             if not result:
                 result = my_bard.chat_image('Опиши максимально подробно что нарисовано на картинке, так что бы человек понял что здесь изображено.', chat_id_full, image)
-            result = utils.bot_markdown_to_html(result)
-            reply_to_long_message(message, result, parse_mode='HTML',
-                                  reply_markup=get_keyboard('chat', message))
-            message.text = '[юзер отправил картинку] ' + (message.caption or 'без подписи')
-            my_log.log_echo(message, result)
-            my_log.log_report(bot, message, chat_id_full, user_id, message.text, result,
-                              parse_mode='HTML')
+
+            # добавить в память что бы боты могли обсудить
+            if result:
+                my_gemini.update_mem('отправил картинку в чат и попросил дать описание', f'{result}', chat_id_full)
+                if chat_id_full in DIALOGS_DB:
+                    new_messages = DIALOGS_DB[chat_id_full]
+                else:
+                    new_messages = []
+                new_messages += [{"role": "user",       "content": 'отправил картинку в чат и попросил дать описание'}]
+                new_messages += [{"role":  "assistant", "content": result}]    
+                DIALOGS_DB[chat_id_full] = new_messages or []
+                DIALOGS_DB[chat_id_full] = DIALOGS_DB[chat_id_full][:20]
+
+                result = utils.bot_markdown_to_html(result)
+                reply_to_long_message(message, result, parse_mode='HTML',
+                                    reply_markup=get_keyboard('chat', message))
+                message.text = '[юзер отправил картинку] ' + (message.caption or 'без подписи')
+                my_log.log_echo(message, result)
+                my_log.log_report(bot, message, chat_id_full, user_id, message.text, result,
+                                parse_mode='HTML')
 
 
 
