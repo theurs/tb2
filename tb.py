@@ -506,9 +506,10 @@ def handle_photo_thread(message: telebot.types.Message):
             photo = message.photo[-1]
             file_info = bot.get_file(photo.file_id)
             image = bot.download_file(file_info.file_path)
-            result = my_gemini.img2txt(image, 'Опиши максимально подробно что нарисовано на картинке, так что бы человек понял что здесь изображено.')
+            query = message.caption or 'Опиши максимально подробно что нарисовано на картинке, так что бы человек понял что здесь изображено.'
+            result = my_gemini.img2txt(image, query)
             if not result:
-                result = my_bard.chat_image('Опиши максимально подробно что нарисовано на картинке, так что бы человек понял что здесь изображено.', chat_id_full, image)
+                result = my_bard.chat_image(query, chat_id_full, image)
 
             # добавить в память что бы боты могли обсудить
             if result:
