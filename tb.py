@@ -1639,6 +1639,8 @@ def do_task(message, custom_prompt: str = ''):
                         answer = answer.strip()
                         answer += '\n\n[Google Bard]'
 
+                        images = []
+                        links = []
                         for x in my_bard.REPLIES:
                             if x[0] == answer:
                                 images, links = x[1][:10], x[2]
@@ -1651,15 +1653,20 @@ def do_task(message, custom_prompt: str = ''):
                         try:
                             reply_to_long_message(message, answer, parse_mode='HTML', disable_web_page_preview = True, 
                                                     reply_markup=get_keyboard('chat', message))
-                            if images:
-                                images_group = [telebot.types.InputMediaPhoto(i) for i in images]
-                                photos_ids = bot.send_media_group(message.chat.id, images_group[:10], reply_to_message_id=message.message_id)
                         except Exception as error:
                             print(f'tb:do_task: {error}')
                             my_log.log2(f'tb:do_task: {error}')
                             reply_to_long_message(message, answer, parse_mode='', disable_web_page_preview = True, 
                                                     reply_markup=get_keyboard('chat', message))
                         my_log.log_report(bot, message, chat_id_full, user_id, user_text, answer, parse_mode='HTML')
+
+                        try:
+                            if images:
+                                images_group = [telebot.types.InputMediaPhoto(i) for i in images]
+                                photos_ids = bot.send_media_group(message.chat.id, images_group[:10], reply_to_message_id=message.message_id)
+                        except Exception as error2:
+                            print(f'tb:do_task:bard_send_images: {error2}')
+                            my_log.log2(f'tb:do_task:bard_send_images: {error2}')
                     else:
                         # my_log.log_echo(message, resp, debug = True)
                         my_log.log_report(bot, message, chat_id_full, user_id, user_text, 'Google Bard не ответил', parse_mode='HTML')
