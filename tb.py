@@ -1636,9 +1636,6 @@ def do_task(message, custom_prompt: str = ''):
                     answer = utils.bot_markdown_to_html(answer)
                     my_log.log_echo(message, answer)
                     if answer:
-                        answer = answer.strip()
-                        answer += '\n\n[Google Bard]'
-
                         images = []
                         links = []
                         for x in my_bard.REPLIES:
@@ -1649,6 +1646,9 @@ def do_task(message, custom_prompt: str = ''):
                                 # for link, title in links, links_titles:
                                 #     text_links += f'<a href="{link}">{title}</a>\n'
                                 break
+
+                        answer = answer.strip()
+                        answer += '\n\n[Google Bard]'
 
                         try:
                             reply_to_long_message(message, answer, parse_mode='HTML', disable_web_page_preview = True, 
