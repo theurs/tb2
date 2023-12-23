@@ -1638,9 +1638,22 @@ def do_task(message, custom_prompt: str = ''):
                     if answer:
                         answer = answer.strip()
                         answer += '\n\n[Google Bard]'
+
+                        for x in my_bard.REPLIES:
+                            if x[0] == answer:
+                                images, links = x[1][:10], x[2]
+                                # links_titles = utils.get_page_names(links)
+                                # text_links = ''
+                                # for link, title in links, links_titles:
+                                #     text_links += f'<a href="{link}">{title}</a>\n'
+                                break
+
                         try:
                             reply_to_long_message(message, answer, parse_mode='HTML', disable_web_page_preview = True, 
                                                     reply_markup=get_keyboard('chat', message))
+                            if images:
+                                images_group = [telebot.types.InputMediaPhoto(i) for i in images]
+                                photos_ids = bot.send_media_group(message.chat.id, images_group[:10], reply_to_message_id=message.message_id)
                         except Exception as error:
                             print(f'tb:do_task: {error}')
                             my_log.log2(f'tb:do_task: {error}')

@@ -11,6 +11,9 @@ import cfg
 import my_log
 
 
+# хранилище для ссылок и картинок в ответах [(text, [images], [links]),...]
+REPLIES = []
+
 # хранилище сессий {chat_id(int):session(bardapi.Bard),...}
 DIALOGS = {}
 # хранилище замков что бы юзеры не могли делать новые запросы пока не получен ответ на старый
@@ -150,29 +153,25 @@ def chat_request(query: str, dialog: str, reset = False) -> str:
         chat_request(query, dialog, reset = True)
         return chat_request(query, dialog, reset)
 
-    if len(links) > 6:
-        links = links[:6]
-    # try:
-    #     if links:
-    #         for url in links:
-    #             if url:
-    #                 # result += f"\n\n[{url}]({url})"
-    #                 result += f"\n\n{url}"
-    # except Exception as error:
-    #     print(error)
-    #     my_log.log2(str(error))
 
-    # images = response['images']
-    # if len(images) > 6:
-    #   images = images[:6]
-    # try:
-    #    if images:
-    #        for image in images:
-    #            if str(image):
-    #                result += f"\n\n{str(image)}"
-    # except Exception as error2:
-    #    print(error2)
-    #    my_log.log2(str(error2))
+
+    images = []
+    if response['images']:
+        for key in response['images']:
+            if key:
+                images.append(key)
+
+    links = []
+    if response['links']:
+        for key in response['links']:
+            if key:
+                links.append(key)
+
+    global REPLIES
+    REPLIES.append((result, images, links))
+    REPLIES = REPLIES[-20:]
+
+
 
     if dialog in LOOP:
         del LOOP[dialog]
