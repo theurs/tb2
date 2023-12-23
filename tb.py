@@ -1633,7 +1633,7 @@ def do_task(message, custom_prompt: str = ''):
                     if not answer:
                         answer = my_bard.chat(message.text, chat_id_full)
                     # my_log.log_echo(message, answer, debug = True)
-                    answer = utils.bot_markdown_to_html(answer)
+
                     my_log.log_echo(message, answer)
                     if answer:
                         images = []
@@ -1647,6 +1647,7 @@ def do_task(message, custom_prompt: str = ''):
                                 #     text_links += f'<a href="{link}">{title}</a>\n'
                                 break
 
+                        answer = utils.bot_markdown_to_html(answer)
                         answer = answer.strip()
                         answer += '\n\n[Google Bard]'
 
