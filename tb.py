@@ -1545,6 +1545,7 @@ def do_task(message, custom_prompt: str = ''):
                 if x not in STOP_WORDS_FALSE_POSITIVE or x in STOP_WORDS:
                     # сообщить администратору о нарушителе
                     send_message_to_admin(message, x, [keyword for keyword in STOP_WORDS if fuzz.ratio(x, keyword) > 90])
+                    break
 
         # не отвечать если это ответ юзера другому юзеру
         try:
