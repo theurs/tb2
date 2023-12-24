@@ -1662,7 +1662,7 @@ def do_task(message, custom_prompt: str = ''):
 
                         try:
                             if images:
-                                images_group = [telebot.types.InputMediaPhoto(i) for i in images]
+                                images_group = [telebot.types.InputMediaPhoto(i) for i in utils.download_images(images)]
                                 photos_ids = bot.send_media_group(message.chat.id, images_group[:10], reply_to_message_id=message.message_id)
                         except Exception as error2:
                             print(f'tb:do_task:bard_send_images: {error2}')

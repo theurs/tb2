@@ -2,9 +2,11 @@
 
 
 import html
+import multiprocessing
 import os
 import random
 import re
+import requests
 import string
 import subprocess
 import telebot
@@ -361,15 +363,46 @@ def replace_tables(text: str) -> str:
     return text
 
 
-if __name__ == '__main__':
-    text = """
-Вот таблица с произвольными данными в 4 столбца и 5 строк:
+def download_image(url):
+    """
+    Downloads an image from the given URL.
 
-|St1|St2|St888888888888888888888888 88888888888888888888883|St4|
-|-|-|-|-|
-|12|64|32|55|
-|77|22|45|1000000000000000 0000000000000000000000000000009|
-|33|14|76|40|
-|50|27|16|73|
-|9|81|94|62|"""
-    print(replace_tables(text))
+    Parameters:
+        url (str): The URL of the image to download.
+
+    Returns:
+        bytes or None: The content of the image if the download is successful, otherwise None.
+    """
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.content
+    else:
+        return None
+
+
+def download_images(urls):
+    """
+    Downloads images from a list of URLs in parallel using multiprocessing.Pool.
+
+    Args:
+        urls (list): A list of strings representing the URLs of the images to be downloaded.
+
+    Returns:
+        list: A list of downloaded images. The list may contain None values for failed downloads.
+    """
+    with multiprocessing.Pool(10) as pool:
+        images = pool.map(download_image, urls)
+    images = [x for x in images if x]
+    return images
+
+
+if __name__ == '__main__':
+    urls = ['https://apps3proxy.mosmetro.tech/2_6.jpg',
+            'https://catalog.detmir.st/media/rVt2_p5HYGlEkW6LONr4fgvECqMsVvi6uSFyo57b03Y=?preset=site_product_gallery_r1500',
+            'https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/VQ-BEI_%286919052100%29.jpg/1200px-VQ-BEI_%286919052100%29.jpg',
+            'https://avtomir.ru/upload/uf/e15/25fuuni2p5rdamt5akx52tnodey28ef0.png',
+            'https://modeli-korabli.ru/images/ships/tmp/korabli/HMS_Victory_T_034/img_06541.jpg',
+            ]
+    
+    print([len(x) for x in download_images(urls)])
+    print(1)
