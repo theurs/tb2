@@ -176,8 +176,7 @@ def log_report(bot: telebot.TeleBot, message: telebot.types.Message,
         time.sleep(1)
         bot.send_message(logs_group, message_thread_id=user_thread, text = f'BOT: {resp}', parse_mode=parse_mode)
     except Exception as error:
-        print(f'my_log:log_report: {error}')
-        log2(f'my_log:log_report: {error}')
+        log2(f'my_log:log_report: {error}\n\n{resp}')
 
         # возможно удалили тему и надо создать ее заново
         user_thread = bot.create_forum_topic(logs_group, user_id_with_name).message_thread_id
@@ -188,8 +187,7 @@ def log_report(bot: telebot.TeleBot, message: telebot.types.Message,
             time.sleep(1)
             bot.send_message(logs_group, message_thread_id=user_thread, text = html.escape(f'BOT: {resp}'), parse_mode=parse_mode)
         except Exception as error2:
-            print(f'my_log:log_report:2: {error}')
-            log2(f'my_log:log_report:2: {error}')
+            log2(f'my_log:log_report:2: {error}\n\n{resp}')
 
 
 if __name__ == '__main__':
