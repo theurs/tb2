@@ -1656,12 +1656,19 @@ def do_task(message, custom_prompt: str = ''):
                             pattern = "\[Image of .*?\]"
                             parts = re.split(pattern, answer)
                             for part in parts:
-                                bot.send_photo(message.chat.id,
-                                            images[n],
-                                            caption=part,
-                                            reply_to_message_id=message.message_id,
-                                            reply_markup=get_keyboard('chat', message),
-                                            )
+                                try:
+                                    bot.send_photo(message.chat.id,
+                                                images[n],
+                                                caption=part,
+                                                reply_to_message_id=message.message_id,
+                                                reply_markup=get_keyboard('chat', message),
+                                                parse_mode='HTML',
+                                                )
+                                except Exception as error_send_photo_parts:
+                                    my_log.log2(f'tb:do_task:bard_send_images: {error_send_photo_parts}\n{images[n]}')
+                                    reply_to_long_message(message, part, parse_mode='HTML', disable_web_page_preview = True, 
+                                                        reply_markup=get_keyboard('chat', message))
+
                                 n += 1
 
                         else:
