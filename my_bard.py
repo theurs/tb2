@@ -3,6 +3,7 @@
 
 import threading
 import random
+import re
 import requests
 
 from bardapi import Bard
