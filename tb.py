@@ -1651,43 +1651,22 @@ def do_task(message, custom_prompt: str = ''):
                         answer = answer.strip()
                         answer += '\n\n[Google Bard]'
 
-                        if images:
-                            n = 0
-                            pattern = "\[Image of .*?\]"
-                            parts = re.split(pattern, answer)
-                            for part in parts:
-                                try:
-                                    bot.send_photo(message.chat.id,
-                                                images[n],
-                                                caption=part,
-                                                reply_to_message_id=message.message_id,
-                                                reply_markup=get_keyboard('chat', message),
-                                                parse_mode='HTML',
-                                                )
-                                except Exception as error_send_photo_parts:
-                                    my_log.log2(f'tb:do_task:bard_send_images: {error_send_photo_parts}\n{images[n]}')
-                                    reply_to_long_message(message, part, parse_mode='HTML', disable_web_page_preview = True, 
-                                                        reply_markup=get_keyboard('chat', message))
+                        try:
+                            reply_to_long_message(message, answer, parse_mode='HTML', disable_web_page_preview = True, 
+                                                    reply_markup=get_keyboard('chat', message))
+                        except Exception as error:
+                            print(f'tb:do_task: {error}')
+                            my_log.log2(f'tb:do_task: {error}')
+                            reply_to_long_message(message, answer, parse_mode='', disable_web_page_preview = True, 
+                                                    reply_markup=get_keyboard('chat', message))
 
-                                n += 1
-
-                        else:
-                            try:
-                                reply_to_long_message(message, answer, parse_mode='HTML', disable_web_page_preview = True, 
-                                                        reply_markup=get_keyboard('chat', message))
-                            except Exception as error:
-                                print(f'tb:do_task: {error}')
-                                my_log.log2(f'tb:do_task: {error}')
-                                reply_to_long_message(message, answer, parse_mode='', disable_web_page_preview = True, 
-                                                        reply_markup=get_keyboard('chat', message))
-
-                        # try:
-                        #     if images:
-                        #         images_group = [telebot.types.InputMediaPhoto(i) for i in images]
-                        #         photos_ids = bot.send_media_group(message.chat.id, images_group[:10], reply_to_message_id=message.message_id)
-                        # except Exception as error2:
-                        #     print(f'tb:do_task:bard_send_images: {error2}')
-                        #     my_log.log2(f'tb:do_task:bard_send_images: {error2}')
+                        try:
+                            if images:
+                                images_group = [telebot.types.InputMediaPhoto(i) for i in images]
+                                photos_ids = bot.send_media_group(message.chat.id, images_group[:10], reply_to_message_id=message.message_id)
+                        except Exception as error2:
+                            print(f'tb:do_task:bard_send_images: {error2}')
+                            my_log.log2(f'tb:do_task:bard_send_images: {error2}')
 
                         if images:
                             my_log.log_report(bot, message, chat_id_full, user_id, user_text, answer + '\n\n' + '\n'.join(images), parse_mode='HTML')
