@@ -134,6 +134,11 @@ def chat_request(query: str, dialog: str, reset = False) -> str:
             return ''
 
     result = response['content']
+    
+    # удалить картинки из текста, телеграм все равно не может их показывать посреди текста
+    result = re.sub("\[Image of .*?\]", "", result)
+    result = result.replace("\n\n", "\n")
+    result = result.replace("\n\n", "\n")
 
     try:
         links = list(set([x for x in response['links'] if 'http://' not in x]))

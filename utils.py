@@ -373,7 +373,7 @@ def download_image(url):
     Returns:
         bytes or None: The content of the image if the download is successful, otherwise None.
     """
-    response = requests.get(url)
+    response = requests.get(url, timeout=5)
     if response.status_code == 200:
         return response.content
     else:
