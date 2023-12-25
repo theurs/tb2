@@ -692,6 +692,17 @@ def bardmode(message: telebot.types.Message):
         bot.reply_to(message, 'Эта команда только для администраторов')
 
 
+@bot.message_handler(commands=['imagemode'])
+def imagemode(message: telebot.types.Message):
+    """включить работу художника в этой теме/чате"""
+    if is_admin_member(message):
+        chat_id_full = get_topic_id(message)
+        CHAT_MODE[chat_id_full] = 'image'
+        bot.reply_to(message, 'Теперь бот рисует картинки в этой теме/чате. Команда /image что_нарисовать | либо слово нарисуй что_нарисовать')
+    else:
+        bot.reply_to(message, 'Эта команда только для администраторов')
+
+
 @bot.message_handler(commands=['chatgptmode'])
 def chatGPTmode(message: telebot.types.Message):
     """включить работу chatGPT в этой теме/чате"""
@@ -1099,6 +1110,8 @@ def image_thread(message: telebot.types.Message):
     else: return
 
     chat_id_full = get_topic_id(message)
+    if CHAT_MODE[chat_id_full] != 'image':
+        return
     if chat_id_full in GPT_CHAT_LOCKS:
         lock = GPT_CHAT_LOCKS[chat_id_full]
     else:
@@ -1331,6 +1344,7 @@ def send_welcome_help(message: telebot.types.Message):
 /bardmode - в этом чате будет отвечать Google Bard
 /geminimode - в этом чате будет отвечать Google Bard
 /claudemode - в этом чате будет отвечать Claude Anthropic
+/imagemode - в этом чате будет работать художник
 /perplexitymode - в этом чате будет отвечать Perplexity или Google, ответы будут браться из интернета
 
 /id - покажет id юзера и группы
@@ -1568,9 +1582,10 @@ def do_task(message, custom_prompt: str = ''):
 
         # команда для рисования
         if msg.strip().startswith('нарисуй'):
-            message.text = '/image ' + message.text.split(maxsplit=1)[1]
-            image_thread(message)
-            return
+            if CHAT_MODE[chat_id_full] == 'image':
+                message.text = '/image ' + message.text.split(maxsplit=1)[1]
+                image_thread(message)
+                return
 
         # можно перенаправить запрос к гуглу или если режим perplexity/google
         if CHAT_MODE[chat_id_full] == 'perplexity' or msg.startswith(tuple(cfg.search_commands)):
