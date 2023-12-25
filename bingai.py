@@ -10,6 +10,7 @@ import queue
 
 from re_edge_gpt import Chatbot, ConversationStyle, ImageGen
 
+import cfg
 import gpt_basic
 import my_log
 
@@ -257,21 +258,40 @@ def gen_imgs(prompt: str):
                     auth = ck["value"]
                     break
 
+        images = []
         if auth:
-            image_gen = ImageGen(auth, quiet = True)
-
             try:
-                images = image_gen.get_images(prompt)
-            except Exception as error:
-                if 'Your prompt has been blocked by Bing. Try to change any bad words and try again.' in str(error):
-                    return 'Бинг отказался это рисовать.'
-                print(f'my_bingai.gen_imgs: {error}')
-                my_log.log2(f'my_bingai.gen_imgs: {error}')
-                return str(error)
+                proxys = cfg.bing_proxy
+            except AttributeError:
+                proxys = ''
+            if proxys:
+                for proxy in proxys:
+                    image_gen = ImageGen(auth, quiet = True, proxy=proxy)
+                    try:
+                        images = image_gen.get_images(prompt)
+                        if images:
+                            break
+                    except Exception as error:
+                        if 'Your prompt has been blocked by Bing. Try to change any bad words and try again.' in str(error) or 'Bad' in str(error):
+                            return 'Бинг отказался это рисовать.'
+                        print(f'my_bingai.gen_imgs: {error}')
+                        my_log.log2(f'my_bingai.gen_imgs: {error}')
+                        #return str(error)
+            else:
+                image_gen = ImageGen(auth, quiet = True)
+                try:
+                    images = image_gen.get_images(prompt)
+                except Exception as error:
+                    if 'Your prompt has been blocked by Bing. Try to change any bad words and try again.' in str(error):
+                        return 'Бинг отказался это рисовать.'
+                    print(f'my_bingai.gen_imgs: {error}')
+                    my_log.log2(f'my_bingai.gen_imgs: {error}')
+                    return str(error)
 
             return images
 
         return 'No auth provided'
+
 
 
 async def chat_async_stream(query: str, dialog: str, style = 3, reset = False):
