@@ -293,7 +293,6 @@ def gen_imgs(prompt: str):
         return 'No auth provided'
 
 
-
 async def chat_async_stream(query: str, dialog: str, style = 3, reset = False):
     """
     Asynchronously streams a chat response based on a given query and dialog.

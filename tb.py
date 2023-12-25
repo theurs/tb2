@@ -1528,7 +1528,6 @@ def do_task(message, custom_prompt: str = ''):
                         reply_to_long_message(message, "Куки файл обновлен.")
                         return
 
-
     with semaphore_talks:
 
         my_log.log_echo(message)
