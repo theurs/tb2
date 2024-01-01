@@ -819,6 +819,7 @@ def export_data_thread(message: telebot.types.Message):
         files = []
         for x in glob.glob('logs/*.log'):
             try:
+                # только те логи у которых имя - цифра.log
                 user_id = int(x.split('/', maxsplit=1)[1].split('.',maxsplit=1)[0])
                 files.append(x)
             except ValueError:
