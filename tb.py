@@ -7,6 +7,7 @@ import re
 import tempfile
 import threading
 import time
+import traceback
 
 import openai
 import telebot
@@ -863,6 +864,8 @@ def export_data_thread(message: telebot.types.Message):
                         _record = (_chat_id_full, _user, _date_and_time, _user_request, _bot_response, _date_in_seconds, _chat_id, _thread_id)
                         data.append(_record)
                     except Exception as error:
+                        error_traceback = traceback.format_exc()
+                        my_log.log2(error_traceback)
                         my_log.log2(f'tb:export_data_thread: {error}')
 
         # Создаем DataFrame из списка строк.
