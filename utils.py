@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 
+import hashlib
 import html
 import multiprocessing
 import os
@@ -394,6 +395,20 @@ def download_images(urls):
         images = pool.map(download_image, urls)
     images = [x for x in images if x]
     return images
+
+
+def nice_hash(s: str, l: int = 12) -> str:
+    """
+    Generate a nice hash of the given string.
+
+    Parameters:
+        s (str): The string to hash.
+
+    Returns:
+        str: The nice hash of the string.
+    """
+    hash_object = hashlib.sha224(s.encode())
+    return f'{hash_object.hexdigest()[:l]}'
 
 
 if __name__ == '__main__':

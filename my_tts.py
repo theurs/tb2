@@ -9,10 +9,6 @@ import tempfile
 
 import edge_tts
 
-import cfg
-import gpt_basic
-import utils
-
 
 # cleanup
 for filePath in [x for x in glob.glob('*.wav') + glob.glob('*.ogg') if 'temp_tts_file' in x]:

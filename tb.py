@@ -2,7 +2,6 @@
 
 import io
 import glob
-import logging
 import os
 import re
 import tempfile
@@ -14,6 +13,7 @@ import telebot
 from fuzzywuzzy import fuzz
 import pandas as pd
 
+import bing_img
 import cfg
 import gpt_basic
 import my_bard
@@ -1102,7 +1102,7 @@ def image_thread(message: telebot.types.Message):
     """генерирует картинку по описанию"""
 
     # работаем только там где администратор включил
-    if not activated_location(message):
+    if not activated_location(message) and not is_admin_member(message):
         return
 
     # не обрабатывать команды к другому боту /cmd@botname args
@@ -1110,7 +1110,7 @@ def image_thread(message: telebot.types.Message):
     else: return
 
     chat_id_full = get_topic_id(message)
-    if CHAT_MODE[chat_id_full] != 'image':
+    if CHAT_MODE[chat_id_full] != 'image' and not is_admin_member(message):
         return
     if chat_id_full in GPT_CHAT_LOCKS:
         lock = GPT_CHAT_LOCKS[chat_id_full]
@@ -1135,8 +1135,11 @@ def image_thread(message: telebot.types.Message):
                     bot.reply_to(message, 'Слишком много сообщений, попробуйте позже')
                     return
                 with ShowAction(message, 'upload_photo'):
-
-                    images = my_genimg.gen_images(prompt)
+                    moderation_flag = gpt_basic.moderation(prompt)
+                    if moderation_flag:
+                        bot.reply_to(message, 'Что то подозрительное есть в вашем запросе, попробуйте написать иначе.')
+                        return
+                    images = my_genimg.gen_images(prompt, moderation_flag)
                     if len(images) > 0:
                         medias = [telebot.types.InputMediaPhoto(i) for i in images if r'https://r.bing.com' not in i]
                         bot.send_media_group(message.chat.id, medias,
@@ -1146,7 +1149,7 @@ def image_thread(message: telebot.types.Message):
                         # сохранить результат в галерее
                         if pics_group:
                             try:
-                                bot.send_message(cfg.pics_group, f'{prompt}', disable_web_page_preview = True)
+                                bot.send_message(cfg.pics_group, f'{prompt} | #{utils.nice_hash(chat_id_full)}', disable_web_page_preview = True)
                                 bot.send_media_group(pics_group, medias)
                             except Exception as error2:
                                 print(error2)
@@ -1175,6 +1178,31 @@ def image_thread(message: telebot.types.Message):
             else:
                 bot.reply_to(message, help, parse_mode = 'Markdown')
                 my_log.log_echo(message, help)
+
+
+@bot.message_handler(commands=['bingcookie', 'cookie', 'c'])
+def set_bing_cookies(message: telebot.types.Message):
+    # не обрабатывать команды к другому боту /cmd@botname args
+    if is_for_me(message.text)[0]: message.text = is_for_me(message.text)[1]
+    else: return
+
+    my_log.log_echo(message)
+
+    if not is_admin_member(message):
+        bot.reply_to(message, 'Эта команда только для админов.')
+        return
+
+    try:
+        args = message.text.split(maxsplit=1)[1]
+        cookies = args.split()
+        n = 0
+        for cookie in cookies:
+            bing_img.COOKIE[n] = cookie.strip()
+            n += 1
+        bot.reply_to(message, f'Добавлено куков: {n}.')
+    except Exception as error:
+        my_log.log2(f'set_bing_cookies: {error}\n\n{message.text}')
+        bot.reply_to(message, 'Использование: /bingcookie <куки для бинга разделенные пробелом> берите их на сайте bing.com, нужны те что с именем _U')
 
 
 @bot.message_handler(commands=['sum'])
@@ -1346,6 +1374,8 @@ def send_welcome_help(message: telebot.types.Message):
 /claudemode - в этом чате будет отвечать Claude Anthropic
 /imagemode - в этом чате будет работать художник
 /perplexitymode - в этом чате будет отвечать Perplexity или Google, ответы будут браться из интернета
+
+/bingcookie - (/cookie /c) заменить куки для бинга
 
 /id - покажет id юзера и группы
 /add - для добавления стоп слова

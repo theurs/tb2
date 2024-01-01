@@ -1,41 +1,27 @@
 #!/usr/bin/env python3
 
 
-from multiprocessing.pool import ThreadPool
-
-import bingai
-import gpt_basic
+import bing_img
 import my_log
 
 
-def openai(prompt: str):
-    """рисует 5 картинок с помощью openai и возвращает сколько смог нарисовать"""
+def bing(prompt: str, moderation_flag: bool = False):
+    """рисует 4 картинки с помощью далли и возвращает сколько смог нарисовать"""
+    if moderation_flag:
+        return []
     try:
-        return gpt_basic.image_gen(prompt, amount = 5)
-    except Exception as error_openai_img:
-        print(f'my_genimg:openai: {error_openai_img}')
-        my_log.log2(f'my_genimg:openai: {error_openai_img}')
+        images = bing_img.gen_images(prompt)
+        if type(images) == list:
+            return images
+    except Exception as error_bing_img:
+        my_log.log2(f'my_genimg:bing: {error_bing_img}')
     return []
 
 
-def gen_images(prompt: str):
-    """рисует одновременно и с помощью бинга и с сервисом от chimera"""
-
-    pool = ThreadPool(processes=2)
-
-    async_result1 = pool.apply_async(bingai.gen_imgs, (prompt,))
-    async_result2 = pool.apply_async(openai, (prompt,))
-
-    bing_images = async_result1.get()
-    openai_images = async_result2.get()
-
-    if not isinstance(bing_images, list):
-        bing_images = []
-    if not isinstance(openai_images, list):
-        openai_images = []
-
-    return bing_images + openai_images
+def gen_images(prompt: str, moderation_flag: bool = False):
+    return bing(prompt, moderation_flag)
 
 
 if __name__ == '__main__':
-    print(gen_images('мотоцикл из золота под дождем'))
+    # print(ddg_search_images('сочная малина'))
+    print(gen_images('рисунок мальчика с чёрными волосами в костюме жирафа и девочки с рыжими волосами в костюме лисы, наклейки, логотип, минимализм, в новый год, наряжают ёлку'))
