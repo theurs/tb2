@@ -818,9 +818,11 @@ def export_data_thread(message: telebot.types.Message):
     with ShowAction(message, 'upload_document'):
         # получить список всех файлов в папке логов
         files = []
-        for x in glob.glob('logs/*.log'):
+        file_list = glob.glob('logs/*.log')
+        for x in file_list:
             try:
                 # только те логи у которых имя - цифра.log
+                x = x.replace('\\', '/')
                 user_id = int(x.split('/', maxsplit=1)[1].split('.',maxsplit=1)[0])
                 files.append(x)
             except ValueError:
@@ -864,8 +866,8 @@ def export_data_thread(message: telebot.types.Message):
                         _record = (_chat_id_full, _user, _date_and_time, _user_request, _bot_response, _date_in_seconds, _chat_id, _thread_id)
                         data.append(_record)
                     except Exception as error:
-                        error_traceback = traceback.format_exc()
-                        my_log.log2(error_traceback)
+                        # error_traceback = traceback.format_exc()
+                        # my_log.log2(error_traceback)
                         my_log.log2(f'tb:export_data_thread: {error}')
 
         # Создаем DataFrame из списка строк.
