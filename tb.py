@@ -1186,7 +1186,7 @@ def set_bing_cookies(message: telebot.types.Message):
     if is_for_me(message.text)[0]: message.text = is_for_me(message.text)[1]
     else: return
 
-    my_log.log_echo(message)
+    my_log.log2(message.text)
 
     if not is_admin_member(message):
         bot.reply_to(message, 'Эта команда только для админов.')
