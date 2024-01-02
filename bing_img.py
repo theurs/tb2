@@ -184,7 +184,14 @@ def gen_images(query: str):
                         try:
                             return get_images(query, cookie, proxy)
                         except Exception as error:
-                            my_log.log2(f'get_images: {error}\n\nQuery: {query}\n\nCookie: {cookie}\n\nProxy: {proxy}')
+                            if 'location' in str(error):
+                                my_log.log2(f'get_images: {error} Cookie: {cookie} Proxy: {proxy}')
+                                for z in COOKIE.items():
+                                    if z[1] == cookie:
+                                        del COOKIE[z[0]]
+                                        break
+                            else:
+                                my_log.log2(f'get_images: {error}\n\nQuery: {query}\n\nCookie: {cookie}\n\nProxy: {proxy}')
                             if str(error).startswith('error1'):
                                 BAD_IMAGES_PROMPT[query] = True
                                 return []
