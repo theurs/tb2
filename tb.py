@@ -1209,6 +1209,9 @@ def set_bing_cookies(message: telebot.types.Message):
     except Exception as error:
         my_log.log2(f'set_bing_cookies: {error}\n\n{message.text}')
         bot.reply_to(message, 'Использование: /bingcookie <куки для бинга разделенные пробелом> берите их на сайте bing.com, нужны те что с именем _U')
+        keys = '\n\n'.join([x[1] for x in bing_img.COOKIE.items()])
+        if keys.strip():
+            bot.reply_to(message, f'Установленные куки: {keys}')
 
 
 @bot.message_handler(commands=['sum'])
