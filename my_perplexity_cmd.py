@@ -60,6 +60,6 @@ def ask(query: str, search_focus: str = 'internet') -> str:
 
 
 if __name__ == '__main__':
-    """Usage ./bingai.py 'list 10 japanese dishes"""
+    """Usage ./my_perplexity.py 'list 10 japanese dishes"""
     t = sys.argv[1]
     print(ask(t))  
