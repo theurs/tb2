@@ -1143,7 +1143,9 @@ def image_thread(message: telebot.types.Message):
                 with ShowAction(message, 'upload_photo'):
                     moderation_flag = gpt_basic.moderation(prompt)
                     if moderation_flag:
-                        bot.reply_to(message, 'Что то подозрительное есть в вашем запросе, попробуйте написать иначе.')
+                        msg = 'Что то подозрительное есть в вашем запросе, попробуйте написать иначе.'
+                        bot.reply_to(message, msg)
+                        my_log.log_echo(message, msg)
                         return
                     images = my_genimg.gen_images(prompt, moderation_flag)
                     if len(images) > 0:
