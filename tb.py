@@ -46,6 +46,7 @@ BOT_ID = bot.get_me().id
 pics_group = cfg.pics_group
 pics_group_url = cfg.pics_group_url
 
+
 # до 40 одновременных потоков для чата с гпт и бингом
 semaphore_talks = threading.Semaphore(40)
 
@@ -69,6 +70,9 @@ CHAT_MODE = my_dic.PersistentDict('db/chat_mode.pkl')
 # хранилище замков что бы юзеры не могли делать новые запросы пока не получен ответ на старый
 # {chat_id(str):threading.Lock(),...}
 GPT_CHAT_LOCKS = {}
+
+# блокировка отправки сообщений об изображениях что бы не было перехлестов
+SEND_IMG_LOCK = threading.Lock()
 
 # список стоп-слов
 try:
@@ -1149,31 +1153,31 @@ def image_thread(message: telebot.types.Message):
                         return
                     images = my_genimg.gen_images(prompt, moderation_flag)
                     if len(images) > 0:
-                        medias = [telebot.types.InputMediaPhoto(i) for i in images if r'https://r.bing.com' not in i]
-                        bot.send_media_group(message.chat.id, medias,
-                                             reply_to_message_id=message.message_id,
-                                             disable_notification=True)
+                        with SEND_IMG_LOCK:
+                            medias = [telebot.types.InputMediaPhoto(i) for i in images if r'https://r.bing.com' not in i]
+                            bot.send_media_group(message.chat.id, medias,
+                                                reply_to_message_id=message.message_id,
+                                                disable_notification=True)
 
-                        # сохранить результат в галерее
-                        if pics_group:
-                            try:
-                                bot.send_message(cfg.pics_group, f'{prompt} | #{utils.nice_hash(chat_id_full)}', disable_web_page_preview = True)
-                                bot.send_media_group(pics_group, medias)
-                            except Exception as error2:
-                                print(error2)
-                                my_log.log2(error2)
+                            # сохранить результат в галерее
+                            if pics_group:
+                                try:
+                                    bot.send_message(cfg.pics_group, f'{prompt} | #{utils.nice_hash(chat_id_full)}', disable_web_page_preview = True)
+                                    bot.send_media_group(pics_group, medias)
+                                except Exception as error2:
+                                    print(error2)
+                                    my_log.log2(error2)
 
-                        my_log.log_echo(message, '[image gen] ')
+                            my_log.log_echo(message, '[image gen] ')
 
-                        # сохранить в отчет вопрос и ответ для юзера, и там же сохранение в группу
-                        my_log.log_report(bot, message, chat_id_full, message.from_user.id, f'/image {prompt}', '\n'.join(images))
+                            # сохранить в отчет вопрос и ответ для юзера, и там же сохранение в группу
+                            my_log.log_report(bot, message, chat_id_full, message.from_user.id, f'/image {prompt}', '\n'.join(images))
 
-                        n = [{'role':'system', 'content':f'user попросил нарисовать\n{prompt}'}, {'role':'system', 'content':'assistant нарисовал с помощью DALL-E'}]
-                        if chat_id_full in DIALOGS_DB:
-                            DIALOGS_DB[chat_id_full] += n
-                        else:
-                            DIALOGS_DB[chat_id_full] = n
-                        
+                            n = [{'role':'system', 'content':f'user попросил нарисовать\n{prompt}'}, {'role':'system', 'content':'assistant нарисовал с помощью DALL-E'}]
+                            if chat_id_full in DIALOGS_DB:
+                                DIALOGS_DB[chat_id_full] += n
+                            else:
+                                DIALOGS_DB[chat_id_full] = n
                     else:
                         bot.reply_to(message, 'Не смог ничего нарисовать. Может настроения нет, а может надо другое описание дать.')
                         my_log.log_echo(message, '[image gen error] ')
