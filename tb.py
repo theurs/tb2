@@ -1192,7 +1192,7 @@ def image_thread(message: telebot.types.Message):
                 my_log.log_echo(message, help)
 
 
-@bot.message_handler(commands=['bingcookie', 'cookie', 'c'])
+@bot.message_handler(commands=['bingcookie', 'cookie', 'co', 'c'])
 def set_bing_cookies(message: telebot.types.Message):
     # не обрабатывать команды к другому боту /cmd@botname args
     if is_for_me(message.text)[0]: message.text = is_for_me(message.text)[1]
@@ -1213,13 +1213,27 @@ def set_bing_cookies(message: telebot.types.Message):
         for cookie in cookies:
             bing_img.COOKIE[n] = cookie.strip()
             n += 1
-        bot.reply_to(message, f'Добавлено куков: {n}.')
+        msg = f'Cookies set: {n}'
+        bot.reply_to(message, msg)
+        my_log.log_echo(message, msg)
     except Exception as error:
         my_log.log2(f'set_bing_cookies: {error}\n\n{message.text}')
-        bot.reply_to(message, 'Использование: /bingcookie <куки для бинга разделенные пробелом> берите их на сайте bing.com, нужны те что с именем _U')
-        keys = '\n\n'.join([x[1] for x in bing_img.COOKIE.items()])
+        msg = 'Usage: /bingcookie <whitespace separated cookies> get in at bing.com, i need _U cookie'
+        bot.reply_to(message, msg)
+        my_log.log_echo(message, msg)
+
+        nl = '\n\n'
+        keys = '\n\n'.join([f'{x[1]}' for x in bing_img.COOKIE.items()])
         if keys.strip():
-            bot.reply_to(message, f'Установленные куки: {keys}')
+            msg = f'Current cookies: {nl}{keys}'
+            my_log.log_echo(message, msg)
+            bot.reply_to(message, msg)
+
+        keys_suspended = '\n\n'.join([f'{x[0]} <b>{round((bing_img.SUSPEND_TIME - (time.time() - x[1]))/60/60, 1)} hours left</b>' for x in bing_img.COOKIE_SUSPENDED.items()])
+        if keys_suspended.strip():
+            msg = f'{nl}Current suspended cookies:{nl}{keys_suspended}'
+            my_log.log_echo(message, msg)
+            bot.reply_to(message, msg)
 
 
 @bot.message_handler(commands=['sum'])
