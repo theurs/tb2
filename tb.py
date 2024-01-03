@@ -1233,7 +1233,7 @@ def set_bing_cookies(message: telebot.types.Message):
         if keys_suspended.strip():
             msg = f'{nl}Current suspended cookies:{nl}{keys_suspended}'
             my_log.log_echo(message, msg)
-            bot.reply_to(message, msg)
+            bot.reply_to(message, parse_mode='HTML', msg)
 
 
 @bot.message_handler(commands=['sum'])
