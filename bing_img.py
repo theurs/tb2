@@ -184,6 +184,7 @@ def gen_images(query: str):
         unsuspend = [x[0] for x in COOKIE_SUSPENDED.items() if time.time() > x[1] + SUSPEND_TIME]
         for x in unsuspend:
             COOKIE[time.time()] = x
+            COOKIE_SUSPENDED.pop(x)
 
         for x in COOKIE.items():
             cookie = x[1].strip()
