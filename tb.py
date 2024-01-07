@@ -145,9 +145,14 @@ class ShowAction(threading.Thread):
         self.action = action
         self.is_running = True
         self.timerseconds = 1
+        self.started_time = time.time()
 
     def run(self):
         while self.is_running:
+            if time.time() - self.started_time > 60*5:
+                self.stop()
+                my_log.log2(f'tb:show_action:stoped after 5min [{self.chat_id}] [{self.thread_id}] is topic: {self.is_topic} action: {self.action}')
+                return
             try:
                 bot.send_chat_action(self.chat_id, self.action, message_thread_id = self.thread_id)
             except Exception as error:
