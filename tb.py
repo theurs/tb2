@@ -1190,6 +1190,9 @@ def image_thread(message: telebot.types.Message):
                         elif 'error1_unsupported_lang' in images[0]:
                             bot_reply(message, 'Не понятный язык.')
                             return
+                        elif 'error1_Bad images' in images[0]:
+                            bot_reply(message, 'Ваш запрос содержит неприемлемый контент.')
+                            return
                         with SEND_IMG_LOCK:
                             medias = [telebot.types.InputMediaPhoto(i) for i in images if r'https://r.bing.com' not in i]
                             bot.send_media_group(message.chat.id, medias,
