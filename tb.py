@@ -430,6 +430,30 @@ def callback_inline_thread(call: telebot.types.CallbackQuery):
                 google(message)
 
 
+def bot_reply(message: telebot.types.Message,
+              msg: str,
+              parse_mode: str = None,
+              disable_web_page_preview: bool = None,
+              reply_markup: telebot.types.InlineKeyboardMarkup = None,
+              send_message: bool = False,
+              not_log: bool = False):
+    """Send message from bot and log it"""
+    try:
+        if reply_markup is None:
+            reply_markup = get_keyboard('chat', message)
+
+        if not not_log:
+            my_log.log_echo(message, msg)
+
+        if send_message:
+            pass
+        else:
+            reply_to_long_message(message, msg, parse_mode=parse_mode, disable_web_page_preview=disable_web_page_preview,
+                            reply_markup=reply_markup)
+    except Exception as unknown:
+        my_log.log2(f'tb:bot_reply: {unknown}')
+
+
 @bot.message_handler(content_types = ['voice', 'audio'])
 def handle_voice(message: telebot.types.Message): 
     """Автоматическое распознавание текст из голосовых сообщений"""
@@ -1147,17 +1171,25 @@ def image_thread(message: telebot.types.Message):
                 prompt = prompt[1]
                 # считаем что рисование тратит 4к символов, хотя на самом деле больше
                 if test_for_spam('Ж' * 4 * 1024, message.from_user.id):
-                    bot.reply_to(message, 'Слишком много сообщений, попробуйте позже')
+                    bot_reply(message, 'Слишком много сообщений, попробуйте позже')
                     return
                 with ShowAction(message, 'upload_photo'):
                     moderation_flag = gpt_basic.moderation(prompt)
                     if moderation_flag:
                         msg = 'Что то подозрительное есть в вашем запросе, попробуйте написать иначе.'
-                        bot.reply_to(message, msg)
-                        my_log.log_echo(message, msg)
+                        bot_reply(message, msg)
                         return
                     images = my_genimg.gen_images(prompt, moderation_flag)
                     if len(images) > 0:
+                        if 'error1_being_reviewed_prompt' in images[0]:
+                            bot_reply(message, 'Ваш запрос содержит потенциально неприемлемый контент.')
+                            return
+                        elif 'error1_blocked_prompt' in images[0]:
+                            bot_reply(message, 'Ваш запрос содержит неприемлемый контент.')
+                            return
+                        elif 'error1_unsupported_lang' in images[0]:
+                            bot_reply(message, 'Не понятный язык.')
+                            return
                         with SEND_IMG_LOCK:
                             medias = [telebot.types.InputMediaPhoto(i) for i in images if r'https://r.bing.com' not in i]
                             bot.send_media_group(message.chat.id, medias,
