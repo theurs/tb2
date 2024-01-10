@@ -49,26 +49,26 @@ def summ_text_worker(text: str, subj: str = 'text') -> str:
         text, subj, _ = text[0], text[1], text[2]
 
     if subj == 'text' or subj == 'pdf':
-        prompt = f"""Summarize the following, briefly answer in [{lang}] language with easy-to-read formatting:
+        prompt = f"""Summarize the following, briefly answer in [ru] language with easy-to-read formatting:
 -------------
 {text}
 -------------
 BEGIN:
 """
-        prompt_gemini = f"""Summarize the following, briefly answer in [{lang}] language, keep it within 1000 words:
+        prompt_gemini = f"""Summarize the following, briefly answer in [ru] language, keep it within 1000 words:
 -------------
 {text}
 -------------
 BEGIN:
 """
     elif subj == 'chat_log':
-        prompt = f"""Summarize the following telegram chat log, briefly answer in [{lang}] language with easy-to-read formatting:
+        prompt = f"""Summarize the following telegram chat log, briefly answer in [ru] language with easy-to-read formatting:
 -------------
 {text}
 -------------
 BEGIN:
 """
-        prompt_gemini = f"""Summarize the following telegram chat log, briefly answer in [{lang}] language, keep it within 1000 words:
+        prompt_gemini = f"""Summarize the following telegram chat log, briefly answer in [ru] language, keep it within 1000 words:
 -------------
 {text}
 -------------
@@ -76,12 +76,12 @@ BEGIN:
 """
 
     elif subj == 'youtube_video':
-        prompt = f"""Summarize the following video subtitles extracted from youtube, briefly answer in [{lang}] language with easy-to-read formatting:
+        prompt = f"""Summarize the following video subtitles extracted from youtube, briefly answer in [ru] language with easy-to-read formatting:
 -------------
 {text}
 -------------
 """
-        prompt_gemini = f"""Summarize the following video subtitles extracted from youtube, briefly answer in [{lang}] language, keep it within 1000 words:
+        prompt_gemini = f"""Summarize the following video subtitles extracted from youtube, briefly answer in [ru] language, keep it within 1000 words:
 -------------
 {text}
 -------------
@@ -196,7 +196,7 @@ if __name__ == "__main__":
     """Usage ./summarize.py '|URL|filename"""
     
    
-    r = summ_url('https://www.youtube.com/watch?v=Nl18-rL3ZaQ')
+    r = summ_url('https://www.youtube.com/watch?v=LEk3Pp0o2hw')
     print(r)
     sys.exit(0)
     
