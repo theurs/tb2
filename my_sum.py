@@ -93,15 +93,14 @@ BEGIN:
 
     result = ''
 
-    if len(prompt) > cfg.max_request:
-        try:
-            r = my_claude.chat(prompt[:my_claude.MAX_QUERY], 'my_summ')
-            if r.strip():
-                result = f'{r}\n\n--\nClaude - Anthropic [{len(prompt[:my_claude.MAX_QUERY])} символов]'
-        except Exception as error:
-            print(f'my_sum:summ_text_worker:claude: {error}')
-            my_log.log2(f'my_sum:summ_text_worker:claude: {error}')
-
+    # if len(prompt) > cfg.max_request:
+    #     try:
+    #         r = my_claude.chat(prompt[:my_claude.MAX_QUERY], 'my_summ')
+    #         if r.strip():
+    #             result = f'{r}\n\n--\nClaude - Anthropic [{len(prompt[:my_claude.MAX_QUERY])} символов]'
+    #     except Exception as error:
+    #         print(f'my_sum:summ_text_worker:claude: {error}')
+    #         my_log.log2(f'my_sum:summ_text_worker:claude: {error}')
 
     if not result:
         try:
