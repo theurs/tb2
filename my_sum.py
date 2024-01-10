@@ -18,6 +18,7 @@ import cfg
 import gpt_basic
 import my_log
 import my_claude
+import my_gemini
 
 
 def get_text_from_youtube(url: str) -> str:
@@ -48,66 +49,76 @@ def summ_text_worker(text: str, subj: str = 'text') -> str:
         text, subj, _ = text[0], text[1], text[2]
 
     if subj == 'text' or subj == 'pdf':
-        prompt = f"""Summarize the following text, briefly answer in Russian with easy-to-read formatting:
+        prompt = f"""Summarize the following, briefly answer in [{lang}] language with easy-to-read formatting:
+-------------
+{text}
+-------------
+BEGIN:
+"""
+        prompt_gemini = f"""Summarize the following, briefly answer in [{lang}] language, keep it within 1000 words:
 -------------
 {text}
 -------------
 BEGIN:
 """
     elif subj == 'chat_log':
-        prompt = f"""Summarize the following telegram chat log, briefly answer in Russian with easy-to-read formatting:
+        prompt = f"""Summarize the following telegram chat log, briefly answer in [{lang}] language with easy-to-read formatting:
 -------------
 {text}
 -------------
 BEGIN:
 """
+        prompt_gemini = f"""Summarize the following telegram chat log, briefly answer in [{lang}] language, keep it within 1000 words:
+-------------
+{text}
+-------------
+BEGIN:
+"""
+
     elif subj == 'youtube_video':
-        prompt = f"""Summarize the following video subtitles extracted from youtube, briefly answer in Russian with easy-to-read formatting:
+        prompt = f"""Summarize the following video subtitles extracted from youtube, briefly answer in [{lang}] language with easy-to-read formatting:
+-------------
+{text}
+-------------
+"""
+        prompt_gemini = f"""Summarize the following video subtitles extracted from youtube, briefly answer in [{lang}] language, keep it within 1000 words:
 -------------
 {text}
 -------------
 """
 
-    if not isinstance(text, str) or len(text) < 1:
-        return ''
+    if type(text) != str or len(text) < 1: return ''
 
     result = ''
 
-    # если текст большой то пытаемся его осилить с помощью клода
     if len(prompt) > cfg.max_request:
         try:
-            response = my_claude.chat(prompt[:my_claude.MAX_QUERY], 'my_summ')
-            if response:
-                to_remove = [
-                    'Вот краткое содержание видео на русском языке в удобочитаемом формате:'
-                    'Вот краткое резюме видео на русском языке в простом формате:',
-                    'Вот краткое резюме основных моментов видео на русском языке в удобочитаемом формате:',
-                    'Вот краткое резюме основных моментов видео на русском языке в простом формате:',
-                    'Вот краткое резюме на русском языке с удобочитаемым форматированием:',
-                    'Вот краткое содержание текста:',
-                ]
-                for i in to_remove:
-                    response = response.replace(i, '', 1)
-                response = response.strip()
-                # first_line = response.split('\n', maxsplit=1)[0].lower()
-                # if 'краткое резюме' in first_line or 'краткое содержание' in first_line:
-                #     response = response.split('\n', maxsplit=1)[1].strip()
-                # last_line = response.strip().rsplit('\n', maxsplit=1)[1]
-                # if last_line.strip() == 'END' or last_line.strip() == 'END.':
-                #     response = response.rsplit('\n', maxsplit=1)[0].strip()
-                result = f'{response}\n\n[Claude Anthropic {len(prompt[:my_claude.MAX_QUERY])} символов]'
+            r = my_claude.chat(prompt[:my_claude.MAX_QUERY], 'my_summ')
+            if r.strip():
+                result = f'{r}\n\n--\nClaude - Anthropic [{len(prompt[:my_claude.MAX_QUERY])} символов]'
         except Exception as error:
-            print(error)
+            print(f'my_sum:summ_text_worker:claude: {error}')
             my_log.log2(f'my_sum:summ_text_worker:claude: {error}')
+
 
     if not result:
         try:
-            response = gpt_basic.ai(prompt[:cfg.max_request])
-            if response:
-                result = f'{response}\n\n[chatGPT {len(prompt[:cfg.max_request])} символов]'
+            r = my_gemini.ai(prompt_gemini[:cfg.max_request]).strip()
+            if r != '':
+                result = f'{r}\n\n--\nGemini Pro [{len(prompt[:cfg.max_request])} символов]'
         except Exception as error:
-            print(error)
-            my_log.log2(f'my_sum:summ_text_worker:chatgpt: {error}')
+            print(f'my_sum:summ_text_worker:gpt: {error}')
+            my_log.log2(f'my_sum:summ_text_worker:gpt: {error}')
+
+
+    if not result:
+        try:
+            r = gpt_basic.ai(prompt[:cfg.max_request]).strip()
+            if r:
+                result = f'{r}\n\n--\nchatGPT-3.5-turbo-16k [{len(prompt[:cfg.max_request])} символов]'
+        except Exception as error:
+            print(f'my_sum:summ_text_worker:gpt: {error}')
+            my_log.log2(f'my_sum:summ_text_worker:gpt: {error}')
 
     return result
 
