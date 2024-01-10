@@ -109,7 +109,7 @@ def img2txt(data_: bytes, prompt: str = "Что на картинке, подр�
             }
         api_key = random.choice(cfg.gemini_keys)
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key={api_key}"
-        proxy = "http://172.28.1.5:3128"
+        proxy = "socks5h://172.28.1.5:1080"
         session = requests.Session()
         session.proxies = {"http": proxy, "https": proxy}
         # response = requests.post(url, json=data, timeout=60).json()
