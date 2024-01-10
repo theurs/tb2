@@ -1322,7 +1322,10 @@ def summ_text_thread(message: telebot.types.Message):
                     if url in SUM_CACHE:
                         r = SUM_CACHE[url]
                     if r:
-                        reply_to_long_message(message, r, disable_web_page_preview = True, reply_markup=get_keyboard('chat', message))
+                        reply_to_long_message(message, utils.bot_markdown_to_html(r),
+                                              disable_web_page_preview = True,
+                                              reply_markup=get_keyboard('chat', message),
+                                              parse_mode='HTML')
                         my_log.log_echo(message, r)
 
                         # сохранить в отчет вопрос и ответ для юзера, и там же сохранение в группу
