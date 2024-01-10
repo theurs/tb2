@@ -1350,7 +1350,7 @@ def summ_text_thread(message: telebot.types.Message):
                             my_log.log_echo(message, m)
                             return
                         if res:
-                            reply_to_long_message(message, res, parse_mode='',
+                            reply_to_long_message(message, utils.bot_markdown_to_html(res), parse_mode='HTML',
                                                 disable_web_page_preview = True,
                                                 reply_markup=get_keyboard('chat', message))
                             my_log.log_echo(message, res)
