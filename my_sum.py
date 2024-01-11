@@ -86,7 +86,7 @@ BEGIN:
                 qq = f'Summarize the content of this article using only provided text, what this text about, in no more than 1000 words, answer in [{lang}] language.'
             r = my_gemini.sum_big_text(text[:my_gemini.MAX_SUM_REQUEST], qq).strip()
             if r != '':
-                result = f'{r}\n\n--\nGemini Pro [{len(prompt[:cfg.max_request])} символов]'
+                result = f'{r}\n\n--\nGemini Pro [{len(prompt[:my_gemini.MAX_SUM_REQUEST])} символов]'
         except Exception as error:
             print(f'my_sum:summ_text_worker:gpt: {error}')
             my_log.log2(f'my_sum:summ_text_worker:gpt: {error}')
