@@ -26,6 +26,11 @@ MAX_REQUEST = 14000
 MAX_CHAT_SIZE = 25000
 
 
+# можно сделать 2 запроса по 15000 в сумме получится запрос размером 30000
+# может быть полезно для сумморизации текстов
+MAX_SUM_REQUEST = 32000
+
+
 # хранилище диалогов {id:list(mem)}
 CHATS = {}
 DB_FILE = 'db/gemini_dialogs.pkl'
@@ -348,6 +353,34 @@ def inject_explicit_content(chat_id: str):
     mem = mem_ + CHATS[chat_id]
     CHATS[chat_id] = mem
     save_memory_to_file()
+
+
+def sum_big_text(text:str, query: str, temperature: float = 0.1) -> str:
+    """
+    Generates a response from an AI model based on a given text,
+    query, and temperature. Split big text into chunks of 15000 characters.
+    Up to 30000 characters.
+
+    Args:
+        text (str): The complete text to be used as input.
+        query (str): The query to be used for generating the response.
+        temperature (float, optional): The temperature parameter for controlling the randomness of the response. Defaults to 0.1.
+
+    Returns:
+        str: The generated response from the AI model.
+    """
+    t1 = text[:int(MAX_SUM_REQUEST/2)]
+    t2 = text[int(MAX_SUM_REQUEST/2):MAX_SUM_REQUEST] if len(text) > int(MAX_SUM_REQUEST/2) else ''
+    mem = []
+    if t2:
+        mem.append({"role": "user", "parts": [{"text": f'Dont answer before get part 2 and question.\n\nPart 1:\n\n{t1}'}]})
+        mem.append({"role": "model", "parts": [{"text": 'Ok.'}]})
+        mem.append({"role": "user", "parts": [{"text": f'Part 2:\n\n{t2}'}]})
+        mem.append({"role": "model", "parts": [{"text": 'Ok.'}]})
+    else:
+        mem.append({"role": "user", "parts": [{"text": f'Dont answer before get part 1 and question.\n\nPart 1:\n\n{t1}'}]})
+        mem.append({"role": "model", "parts": [{"text": 'Ok.'}]})
+    return ai(query, mem=mem, temperature=temperature)
 
 
 def chat_cli():
