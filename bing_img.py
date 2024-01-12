@@ -3,56 +3,64 @@
 
 import time
 import threading
-import socket
 
-import random
 import re
-
 import requests
+from sqlitedict import SqliteDict
 
 import cfg
 import my_log
-import my_dic
 
 
-BIG_LOCK = threading.Lock()
+# BIG_LOCK = threading.Lock()
+
+# limit user to 3 concurrent requests
+# {id: threading.Semaphore(3)}
+USER_LOCKS = {}
 
 
-# не использовать 1 и тот же ключ одновременно для разных запросов
+# do not use 1 same key at the same time for different requests
 LOCKS = {}
 
+# LOCK_STORAGE = threading.Lock()
 
-# {0: cookie0, 1: cookie1, ...}
-COOKIE = my_dic.PersistentDict('db/bing_cookie.pkl')
-# cookies frozen for a day
-COOKIE_SUSPENDED = my_dic.PersistentDict('db/bing_cookie_suspended.pkl')
-SUSPEND_TIME = 60 * 60 * 12
+# {cookie: times used, ...}
+COOKIE = SqliteDict('db/bing_cookie.db', autocommit=True)
+# {cookie:datetime, ...}
 
-# хранилище запросов которые бинг отбраковал, их нельзя повторять
-BAD_IMAGES_PROMPT = my_dic.PersistentDict('db/bad_images_prompt.pkl')
+# storage of requests that Bing rejected, they cannot be repeated
+BAD_IMAGES_PROMPT = SqliteDict('db/bad_images_prompt.db', autocommit=True)
 
-
-take_ip_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-take_ip_socket.connect(("8.8.8.8", 80))
-FORWARDED_IP: str = take_ip_socket.getsockname()[0]
-take_ip_socket.close()
 
 BING_URL = "https://www.bing.com"
-HEADERS = {
-    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,"
-              "image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.77",
-    "accept-language": "en,zh-TW;q=0.9,zh;q=0.8,en-GB;q=0.7,en-US;q=0.6",
-    "cache-control": "max-age=0",
-    "content-type": "application/x-www-form-urlencoded",
-    "referrer": "https://www.bing.com/images/create/",
-    "origin": "https://www.bing.com",
-    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                  "AppleWebKit/537.36 (KHTML, like Gecko) "
-                  "Chrome/119.0.0.0 "
-                  "Safari/537.36 "
-                  "Edg/119.0.0.0",
-    "x-forwarded-for": FORWARDED_IP,
-}
+
+# {proxy: (timestamp, external_ip)}
+PROXY_ADDR_CACHE = SqliteDict('db/proxy_addr_cache.db', autocommit=True)
+PROXY_ADDR_CACHE_MAX_TIME = 60*60*24
+
+
+def get_external_ip(proxy):
+    """
+    Retrieves the external IP address using a proxy.
+
+    Parameters:
+    - proxy (str): The proxy to be used for the request.
+
+    Returns:
+    - str: The external IP address.
+    """
+    if proxy in PROXY_ADDR_CACHE:
+        if time.time() - PROXY_ADDR_CACHE[proxy][0] < PROXY_ADDR_CACHE_MAX_TIME:
+            return PROXY_ADDR_CACHE[proxy][1]
+        else:
+            del PROXY_ADDR_CACHE[proxy]
+    session = requests.Session()
+    session.proxies.update({'http': proxy, 'https': proxy})
+    response = session.get('https://ifconfig.me')
+    external_ip = response.text.strip() or '127.0.0.1'
+    if external_ip != '127.0.0.1':
+        PROXY_ADDR_CACHE[proxy] = (time.time(), external_ip)
+    return external_ip
 
 
 def get_images(prompt: str,
@@ -82,6 +90,23 @@ def get_images(prompt: str,
     Returns:
         list: A list of normal image links (URLs) from Bing search.
     """
+
+    FORWARDED_IP = get_external_ip(proxy)
+    HEADERS = {
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,"
+                "image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.77",
+        "accept-language": "en,zh-TW;q=0.9,zh;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+        "cache-control": "max-age=0",
+        "content-type": "application/x-www-form-urlencoded",
+        "referrer": "https://www.bing.com/images/create/",
+        "origin": "https://www.bing.com",
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/119.0.0.0 "
+                    "Safari/537.36 "
+                    "Edg/119.0.0.0",
+        "x-forwarded-for": FORWARDED_IP,
+    }
 
     url_encoded_prompt = requests.utils.quote(prompt)
 
@@ -160,7 +185,7 @@ def get_images(prompt: str,
     return normal_image_links
 
 
-def gen_images(query: str):
+def gen_images(query: str, user_id: str = ''):
     """
     Generate images based on the given query.
 
@@ -174,63 +199,61 @@ def gen_images(query: str):
         Exception: If there is an error getting the images.
 
     """
-    with BIG_LOCK:
+    
+    if user_id not in USER_LOCKS:
+        USER_LOCKS[user_id] = threading.Semaphore(3)
+
+    with USER_LOCKS[user_id]:
+        # print(user_id, USER_LOCKS[user_id]._value)
+    # with BIG_LOCK:
         if query in BAD_IMAGES_PROMPT:
             my_log.log2(f'get_images: {query} is in BAD_IMAGES_PROMPT')
             return ['error1_Bad images',]
 
-        cookies = []
+        # сортируем куки по количеству обращений к ним
+        cookies = [x for x in COOKIE.items()]
+        cookies = sorted(cookies, key=lambda x: x[1])
+        cookies = [x[0] for x in cookies]
 
-        # unsuspend
-        unsuspend = [x[0] for x in COOKIE_SUSPENDED.items() if time.time() > x[1] + SUSPEND_TIME]
-        for x in unsuspend:
-            COOKIE[time.time()] = x
-            COOKIE_SUSPENDED.pop(x)
-
-        for x in COOKIE.items():
-            cookie = x[1].strip()
-            cookies.append(cookie)
-
-        random.shuffle(cookies)
         for cookie in cookies:
             if cookie not in LOCKS:
                 LOCKS[cookie] = threading.Lock()
             with LOCKS[cookie]:
+                # сразу обновляем счетчик чтоб этот ключ ушел вниз списка
+                COOKIE[cookie] += 1
                 if cfg.bing_proxy:
                     for proxy in cfg.bing_proxy:
                         try:
+                            # my_log.log2(f'bing_img:gen_images: key {cookie[:5]} proxy {proxy} used times {COOKIE[cookie]}')
                             return get_images(query, cookie, proxy)
                         except Exception as error:
-                            if 'location' in str(error):
-                                my_log.log2(f'get_images: {error} Cookie: {cookie} Proxy: {proxy}')
-                                for z in COOKIE.items():
-                                    if z[1] == cookie:
-                                        del COOKIE[z[0]]
-                                        COOKIE_SUSPENDED[z[1]] = time.time()
-                                        break
-                            else:
-                                my_log.log2(f'get_images: {error}\n\nQuery: {query}\n\nCookie: {cookie}\n\nProxy: {proxy}')
+                            # if 'location' in str(error):
+                            #     my_log.log2(f'get_images: {error} Cookie: {cookie} Proxy: {proxy}')
+                            #     return []
+                            # else:
+                            #     my_log.log2(f'get_images: {error}\n\nQuery: {query}\n\nCookie: {cookie}\n\nProxy: {proxy}')
                             if str(error).startswith('error1'):
                                 BAD_IMAGES_PROMPT[query] = True
                                 return [str(error),]
+                            else:
+                                my_log.log2(f'get_images: {error}\n\nQuery: {query}\n\nCookie: {cookie}\n\nProxy: {proxy}')
                 else:
                     try:
                         return get_images(query, cookie)
                     except Exception as error:
-                        if 'location' in str(error):
-                                my_log.log2(f'get_images: {error} Cookie: {cookie}')
-                                for z in COOKIE.items():
-                                    if z[1] == cookie:
-                                        del COOKIE[z[0]]
-                                        COOKIE_SUSPENDED[z[1]] = time.time()
-                                        break
-                        else:
-                            my_log.log2(f'get_images: {error}\n\nQuery: {query}\n\nCookie: {cookie}')
+                        # if 'location' in str(error):
+                        #         my_log.log2(f'get_images: {error} Cookie: {cookie}')
+                        #         break
+                        # else:
+                        #     my_log.log2(f'get_images: {error}\n\nQuery: {query}\n\nCookie: {cookie}')
                         if str(error).startswith('error1'):
                             BAD_IMAGES_PROMPT[query] = True
                             return []
+                        else:
+                            my_log.log2(f'get_images: {error}\n\nQuery: {query}\n\nCookie: {cookie}\n\nProxy: {proxy}')
+
         return []
 
 
 if __name__ == '__main__':
-    print(gen_images('fuck sex babe'))
+    print(gen_images('wolf face big'))

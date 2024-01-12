@@ -602,7 +602,11 @@ def moderation(text: str) -> str:
             print(error)
             my_log.log2(f'gpt_basic.moderation: {error}\n\nServer: {openai.api_base}')
 
-    categories = response['results'][0]['categories']
+    try:
+        categories = response['results'][0]['categories']
+    except:
+        return ''
+
     result = ''
 
     if categories['sexual']:

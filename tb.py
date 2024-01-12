@@ -10,6 +10,7 @@ import time
 import traceback
 
 import openai
+import prettytable
 import telebot
 from fuzzywuzzy import fuzz
 import pandas as pd
@@ -198,6 +199,44 @@ class Spamer:
             self.timestamp = current_time
 
 
+
+def authorized_admin(message: telebot.types.Message) -> bool:
+    """if admin"""
+    if message.from_user.id not in cfg.admins:
+        bot_reply_tr(message, "This command is only available to administrators")
+        return False
+    return authorized(message)
+
+
+def authorized(message: telebot.types.Message) -> bool:
+    """
+    Check if the user is authorized based on the given message.
+
+    Parameters:
+        message (telebot.types.Message): The message object containing the chat ID and user ID.
+
+    Returns:
+        bool: True if the user is authorized, False otherwise.
+    """
+
+    # do not process commands to another bot /cmd@botname args
+    if is_for_me(message.text)[0]:
+        message.text = is_for_me(message.text)[1]
+    else:
+        return False
+
+    if message.text:
+        my_log.log_echo(message)
+    else:
+        my_log.log_media(message)
+
+    # никаких проверок и тротлинга для админов
+    if message.from_user.id in cfg.admins:
+        return True
+
+    return True
+
+
 def dialog_add_user_request(chat_id: str, text: str, engine: str = 'gpt') -> str:
     """добавляет в историю переписки с юзером его новый запрос и ответ от чатбота
     делает запрос и возвращает ответ
@@ -381,6 +420,48 @@ def activated_location(message: telebot.types.Message) -> bool:
         return True
     else:
         return False
+
+
+def bot_reply(message: telebot.types.Message,
+              msg: str,
+              parse_mode: str = None,
+              disable_web_page_preview: bool = None,
+              reply_markup: telebot.types.InlineKeyboardMarkup = None,
+              send_message: bool = False,
+              not_log: bool = False):
+    """Send message from bot and log it"""
+    try:
+        if reply_markup is None:
+            reply_markup = get_keyboard('chat', message)
+
+        if not not_log:
+            my_log.log_echo(message, msg)
+
+        if send_message:
+            send_long_message(message, msg, parse_mode=parse_mode,
+                                disable_web_page_preview=disable_web_page_preview,
+                                reply_markup=reply_markup)
+        else:
+            reply_to_long_message(message, msg, parse_mode=parse_mode, disable_web_page_preview=disable_web_page_preview,
+                            reply_markup=reply_markup)
+    except Exception as unknown:
+        my_log.log2(f'tb:bot_reply: {unknown}')
+
+
+# def bot_reply_tr(message: telebot.types.Message,
+#               msg: str,
+#               parse_mode: str = None,
+#               disable_web_page_preview: bool = None,
+#               reply_markup: telebot.types.InlineKeyboardMarkup = None,
+#               send_message: bool = False,
+#               not_log: bool = False):
+#     chat_id_full = get_topic_id(message)
+#     lang = get_lang(chat_id_full, message)
+#     msg = tr(msg, lang)
+#     bot_reply(message, msg, parse_mode, disable_web_page_preview, reply_markup, send_message, not_log)
+
+# в этом боте нет локализации
+bot_reply_tr = bot_reply
 
 
 def get_keyboard(kbd: str, message: telebot.types.Message, flag: str = '') -> telebot.types.InlineKeyboardMarkup:
@@ -1232,49 +1313,57 @@ def image_thread(message: telebot.types.Message):
                 my_log.log_echo(message, help)
 
 
-@bot.message_handler(commands=['bingcookie', 'cookie', 'co', 'c'])
+@bot.message_handler(commands=['bingcookieclear', 'kc'], func=authorized_admin)
+def clear_bing_cookies(message: telebot.types.Message):
+    bing_img.COOKIE.clear()
+    bot_reply_tr(message, 'Cookies cleared.')
+
+
+@bot.message_handler(commands=['bingcookie', 'cookie', 'k'], func=authorized_admin)
 def set_bing_cookies(message: telebot.types.Message):
-    # не обрабатывать команды к другому боту /cmd@botname args
-    if is_for_me(message.text)[0]: message.text = is_for_me(message.text)[1]
-    else: return
-
-    my_log.log2(message.text)
-
-    if not is_admin_member(message):
-        bot.reply_to(message, 'Эта команда только для админов.')
-        return
-
     try:
         args = message.text.split(maxsplit=1)[1]
         args = args.replace('\n', ' ')
         cookies = args.split()
         n = 0
-        bing_img.COOKIE.clear()
-        bing_img.COOKIE_SUSPENDED.clear()
+
         for cookie in cookies:
-            bing_img.COOKIE[n] = cookie.strip()
+            if len(cookie) < 200:
+                continue
+            if cookie in bing_img.COOKIE:
+                continue
+            cookie = cookie.strip()
+            bing_img.COOKIE[cookie] = 0
             n += 1
-        msg = f'Cookies set: {n}'
-        bot.reply_to(message, msg)
-        my_log.log_echo(message, msg)
+
+        msg = f'Cookies added: {n}'
+        bot_reply(message, msg)
+
     except Exception as error:
-        my_log.log2(f'set_bing_cookies: {error}\n\n{message.text}')
-        msg = 'Usage: /bingcookie <whitespace separated cookies> get in at bing.com, i need _U cookie'
-        bot.reply_to(message, msg)
-        my_log.log_echo(message, msg)
 
-        nl = '\n\n'
-        keys = '\n\n'.join([f'{x[1]}' for x in bing_img.COOKIE.items()])
-        if keys.strip():
-            msg = f'Current cookies: {nl}{keys}'
-            my_log.log_echo(message, msg)
-            bot.reply_to(message, msg)
+        if 'list index out of range' not in str(error):
+            my_log.log2(f'set_bing_cookies: {error}\n\n{message.text}')
 
-        keys_suspended = '\n\n'.join([f'{x[0]} <b>{round((bing_img.SUSPEND_TIME - (time.time() - x[1]))/60/60, 1)} hours left</b>' for x in bing_img.COOKIE_SUSPENDED.items()])
-        if keys_suspended.strip():
-            msg = f'{nl}Current suspended cookies:{nl}{keys_suspended}'
-            my_log.log_echo(message, msg)
-            bot.reply_to(message, msg, parse_mode='HTML')
+        bot_reply_tr(message, 'Usage: /bingcookie <whitespace separated cookies> get in at bing.com, i need _U cookie')
+
+        # сортируем куки по количеству обращений к ним
+        cookies = [x for x in bing_img.COOKIE.items()]
+        cookies = sorted(cookies, key=lambda x: x[1])
+
+        pt = prettytable.PrettyTable(
+            align = "r",
+            set_style = prettytable.MSWORD_FRIENDLY,
+            hrules = prettytable.HEADER,
+            junction_char = '|'
+            )
+        header = ['Bing key', 'Used times']
+        pt.field_names = header
+
+        for cookie in cookies:
+            pt.add_row([cookie[0][:5], cookie[1]])
+
+        msg = f'Current cookies: {len(bing_img.COOKIE)} \n\n<pre><code>{pt.get_string()}</code></pre>'
+        bot_reply(message, msg, parse_mode='HTML')
 
 
 @bot.message_handler(commands=['sum'])
@@ -1450,7 +1539,8 @@ def send_welcome_help(message: telebot.types.Message):
 /imagemode - в этом чате будет работать художник
 /perplexitymode - в этом чате будет отвечать Perplexity или Google, ответы будут браться из интернета
 
-/bingcookie - (/cookie /c) заменить куки для бинга
+/k - добавить куки для бинга
+/kc - удалить все куки для бинга
 
 /id - покажет id юзера и группы
 /add - для добавления стоп слова
@@ -1464,6 +1554,14 @@ def send_welcome_help(message: telebot.types.Message):
 
     bot.reply_to(message, help, parse_mode='Markdown')
     my_log.log_echo(message, help)
+
+
+def send_long_message(message: telebot.types.Message, resp: str, parse_mode:str = None, disable_web_page_preview: bool = None,
+                      reply_markup: telebot.types.InlineKeyboardMarkup = None):
+    """отправляем сообщение, если оно слишком длинное то разбивает на 2 части либо отправляем как текстовый файл"""
+    reply_to_long_message(message=message, resp=resp, parse_mode=parse_mode,
+                          disable_web_page_preview=disable_web_page_preview,
+                          reply_markup=reply_markup, send_message = True)
 
 
 def reply_to_long_message(message: telebot.types.Message, resp: str, parse_mode: str = None,

@@ -25,6 +25,7 @@ PySocks
 python-Levenshtein
 telebot
 SpeechRecognition
+sqlitedict
 # python -m textblob.download_corpora
 textblob
 trafilatura
