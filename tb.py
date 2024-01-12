@@ -199,6 +199,41 @@ class Spamer:
             self.timestamp = current_time
 
 
+# def tr(text: str, lang: str, ai: bool = False) -> str:
+#     """
+#     This function translates text to the specified language,
+#     using either the AI translation engine or the standard translation engine.
+
+#     Args:
+#         text: The text to translate.
+#         lang: The language to translate to.
+#         ai: Whether to use the AI translation engine.
+
+#     Returns:
+#         The translated text.
+#     """
+#     key = str((text, lang))
+#     if key in AUTO_TRANSLATIONS:
+#         return AUTO_TRANSLATIONS[key]
+
+#     translated = ''
+
+#     if ai:
+#         translated = my_gemini.translate(text, to_lang=lang)
+
+#     if not translated:
+#         translated = my_trans.translate_text2(text, lang)
+
+#     if translated:
+#         AUTO_TRANSLATIONS[key] = translated
+#     else:
+#         AUTO_TRANSLATIONS[key] = text
+#     return AUTO_TRANSLATIONS[key]
+
+# в этом боте не реализована локализация
+def tr(text: str, lang: str, ai: bool = False) -> str:
+    return text
+
 
 def authorized_admin(message: telebot.types.Message) -> bool:
     """if admin"""
