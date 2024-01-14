@@ -1818,11 +1818,17 @@ def do_task(message, custom_prompt: str = ''):
             CHAT_MODE[chat_id_full] = 'chatGPT'
 
         # команда для рисования
-        if msg.strip().startswith('нарисуй'):
-            if CHAT_MODE[chat_id_full] == 'image':
-                message.text = '/image ' + message.text.split(maxsplit=1)[1]
-                image_thread(message)
-                return
+        if CHAT_MODE[chat_id_full] == 'image' or is_admin_member(message):
+            first_word = msg.split(maxsplit=1)[0]
+            image_words = ['нарисуй', 'создай', 'изобрази', 'начерти', 'сделай',
+                           'намалюй', 'очерти', 'накидай', 'набросай', 'представь',
+                           'покажи', 'передай', 'рисуй', 'воссоздай', 'отобрази',
+                           'зарисуй']
+            for w in image_words:
+                if fuzz.ratio(first_word, w) > 80:
+                    message.text = '/image ' + message.text.split(maxsplit=1)[1]
+                    image_thread(message)
+                    return
 
         # можно перенаправить запрос к гуглу или если режим perplexity/google
         if CHAT_MODE[chat_id_full] == 'perplexity' or msg.startswith(tuple(cfg.search_commands)):
