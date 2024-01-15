@@ -8,7 +8,6 @@ import sys
 from urllib.parse import urlparse
 
 import chardet
-import magic
 import PyPDF2
 import requests
 import trafilatura
@@ -19,6 +18,7 @@ import gpt_basic
 import my_log
 import my_claude
 import my_gemini
+import utils
 
 
 def get_text_from_youtube(url: str) -> str:
@@ -132,7 +132,7 @@ def summ_url(url:str) -> str:
             if len(content) > 1 * 1024 * 1024: # 1 MB
                 break
 
-        if 'PDF document' in magic.from_buffer(content):
+        if utils.mime_from_buffer(content) == 'application/pdf':
             pdf = True
             file_bytes = io.BytesIO(content)
             pdf_reader = PyPDF2.PdfReader(file_bytes)

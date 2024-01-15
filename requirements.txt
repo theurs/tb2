@@ -15,15 +15,11 @@ openpyxl
 pandas
 prettytable
 pyenchant
-python-magic
-# python-magic-bin
-py_trans
-# pylibmagic
 pylatexenc
 PyPDF2
 PySocks
+pytelegrambotapi
 python-Levenshtein
-telebot
 SpeechRecognition
 sqlitedict
 # python -m textblob.download_corpora

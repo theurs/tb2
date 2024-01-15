@@ -199,37 +199,6 @@ class Spamer:
             self.timestamp = current_time
 
 
-# def tr(text: str, lang: str, ai: bool = False) -> str:
-#     """
-#     This function translates text to the specified language,
-#     using either the AI translation engine or the standard translation engine.
-
-#     Args:
-#         text: The text to translate.
-#         lang: The language to translate to.
-#         ai: Whether to use the AI translation engine.
-
-#     Returns:
-#         The translated text.
-#     """
-#     key = str((text, lang))
-#     if key in AUTO_TRANSLATIONS:
-#         return AUTO_TRANSLATIONS[key]
-
-#     translated = ''
-
-#     if ai:
-#         translated = my_gemini.translate(text, to_lang=lang)
-
-#     if not translated:
-#         translated = my_trans.translate_text2(text, lang)
-
-#     if translated:
-#         AUTO_TRANSLATIONS[key] = translated
-#     else:
-#         AUTO_TRANSLATIONS[key] = text
-#     return AUTO_TRANSLATIONS[key]
-
 # в этом боте не реализована локализация
 def tr(text: str, lang: str, ai: bool = False) -> str:
     return text
@@ -462,7 +431,6 @@ def bot_reply(message: telebot.types.Message,
               parse_mode: str = None,
               disable_web_page_preview: bool = None,
               reply_markup: telebot.types.InlineKeyboardMarkup = None,
-              send_message: bool = False,
               not_log: bool = False):
     """Send message from bot and log it"""
     try:
@@ -472,28 +440,11 @@ def bot_reply(message: telebot.types.Message,
         if not not_log:
             my_log.log_echo(message, msg)
 
-        if send_message:
-            send_long_message(message, msg, parse_mode=parse_mode,
-                                disable_web_page_preview=disable_web_page_preview,
-                                reply_markup=reply_markup)
-        else:
-            reply_to_long_message(message, msg, parse_mode=parse_mode, disable_web_page_preview=disable_web_page_preview,
-                            reply_markup=reply_markup)
+        reply_to_long_message(message, msg, parse_mode=parse_mode, disable_web_page_preview=disable_web_page_preview,
+                              reply_markup=reply_markup)
     except Exception as unknown:
         my_log.log2(f'tb:bot_reply: {unknown}')
 
-
-# def bot_reply_tr(message: telebot.types.Message,
-#               msg: str,
-#               parse_mode: str = None,
-#               disable_web_page_preview: bool = None,
-#               reply_markup: telebot.types.InlineKeyboardMarkup = None,
-#               send_message: bool = False,
-#               not_log: bool = False):
-#     chat_id_full = get_topic_id(message)
-#     lang = get_lang(chat_id_full, message)
-#     msg = tr(msg, lang)
-#     bot_reply(message, msg, parse_mode, disable_web_page_preview, reply_markup, send_message, not_log)
 
 # в этом боте нет локализации
 bot_reply_tr = bot_reply
@@ -544,30 +495,6 @@ def callback_inline_thread(call: telebot.types.CallbackQuery):
                 message = message.reply_to_message
                 message.text = '/google ' + message.text
                 google(message)
-
-
-def bot_reply(message: telebot.types.Message,
-              msg: str,
-              parse_mode: str = None,
-              disable_web_page_preview: bool = None,
-              reply_markup: telebot.types.InlineKeyboardMarkup = None,
-              send_message: bool = False,
-              not_log: bool = False):
-    """Send message from bot and log it"""
-    try:
-        if reply_markup is None:
-            reply_markup = get_keyboard('chat', message)
-
-        if not not_log:
-            my_log.log_echo(message, msg)
-
-        if send_message:
-            pass
-        else:
-            reply_to_long_message(message, msg, parse_mode=parse_mode, disable_web_page_preview=disable_web_page_preview,
-                            reply_markup=reply_markup)
-    except Exception as unknown:
-        my_log.log2(f'tb:bot_reply: {unknown}')
 
 
 @bot.message_handler(content_types = ['voice', 'audio'])
@@ -1318,7 +1245,8 @@ def image_thread(message: telebot.types.Message):
                             # сохранить результат в галерее
                             if pics_group:
                                 try:
-                                    bot.send_message(cfg.pics_group, f'{prompt} | #{utils.nice_hash(chat_id_full)}', disable_web_page_preview = True)
+                                    bot.send_message(cfg.pics_group, f'{prompt} | #{utils.nice_hash(chat_id_full)}',
+                                                     link_preview_options=telebot.types.LinkPreviewOptions(is_disabled=False))
                                     bot.send_media_group(pics_group, medias)
                                 except Exception as error2:
                                     print(error2)
@@ -1591,14 +1519,6 @@ def send_welcome_help(message: telebot.types.Message):
     my_log.log_echo(message, help)
 
 
-def send_long_message(message: telebot.types.Message, resp: str, parse_mode:str = None, disable_web_page_preview: bool = None,
-                      reply_markup: telebot.types.InlineKeyboardMarkup = None):
-    """отправляем сообщение, если оно слишком длинное то разбивает на 2 части либо отправляем как текстовый файл"""
-    reply_to_long_message(message=message, resp=resp, parse_mode=parse_mode,
-                          disable_web_page_preview=disable_web_page_preview,
-                          reply_markup=reply_markup, send_message = True)
-
-
 def reply_to_long_message(message: telebot.types.Message, resp: str, parse_mode: str = None,
                           disable_web_page_preview: bool = None,
                           reply_markup: telebot.types.InlineKeyboardMarkup = None,
@@ -1612,6 +1532,8 @@ def reply_to_long_message(message: telebot.types.Message, resp: str, parse_mode:
         else:
             return 0
 
+    preview = telebot.types.LinkPreviewOptions(is_disabled=disable_web_page_preview)
+
     if len(resp) < 20000:
         if parse_mode == 'HTML':
             chunks = utils.split_html(resp, 3500)
@@ -1620,21 +1542,21 @@ def reply_to_long_message(message: telebot.types.Message, resp: str, parse_mode:
         for chunk in chunks:
             try:
                 bot.reply_to(message, chunk, parse_mode=parse_mode,
-                             disable_web_page_preview=disable_web_page_preview,
+                             link_preview_options=preview,
                              reply_markup=reply_markup,
                              disable_notification=disable_notification)
             except Exception as error:
                 if 'Too Many Requests: retry after' in str(error):
                     time.sleep(get_seconds(str(error)))
                     bot.reply_to(message, chunk, parse_mode=parse_mode,
-                                disable_web_page_preview=disable_web_page_preview,
+                                link_preview_options=preview,
                                 reply_markup=reply_markup,
                                 disable_notification=disable_notification)
                 else:
                     print(f'tb:reply_to_long_message: {error}')
                     my_log.log2(f'tb:reply_to_long_message: {error}')
                     bot.reply_to(message, chunk, parse_mode='',
-                                disable_web_page_preview=disable_web_page_preview,
+                                link_preview_options=preview,
                                 reply_markup=reply_markup,
                                 disable_notification=disable_notification)
             time.sleep(2)
@@ -1658,8 +1580,7 @@ def send_message_to_admin(message: telebot.types.Message, bad_word_found: str, s
         message_link = f't.me/{message.chat.username}/{message.message_id}'
 
     bot.send_message(chat_id=chat_id, message_thread_id = thread_id, 
-                     text=f"Посмотрите сообщение здесь, возможно маты\n\nНечеткое совпадение >90%\n\n{bad_word_found} -> {str(stop_words[:10])}\n\n{message_link}",
-                     disable_web_page_preview = True)
+                     text=f"Посмотрите сообщение здесь, возможно маты\n\nНечеткое совпадение >90%\n\n{bad_word_found} -> {str(stop_words[:10])}\n\n{message_link}")
 
 
 def send_message_to_admin2(message: telebot.types.Message, user_msg: str, moderation_result: str):
@@ -1675,8 +1596,7 @@ def send_message_to_admin2(message: telebot.types.Message, user_msg: str, modera
         message_link = f't.me/{message.chat.username}/{message.message_id}'
 
     bot.send_message(chat_id=chat_id, message_thread_id = thread_id, 
-                     text=f"Посмотрите сообщение здесь, возможно нарушение\n\n{user_msg}\n\n{moderation_result}\n\n{message_link}",
-                     disable_web_page_preview = True)
+                     text=f"Посмотрите сообщение здесь, возможно нарушение\n\n{user_msg}\n\n{moderation_result}\n\n{message_link}")
 
 
 def test_for_spam(text: str, user_id: int) -> bool:

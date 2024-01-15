@@ -6,31 +6,17 @@ import subprocess
 
 import enchant
 from langdetect import detect, detect_langs
-from py_trans import PyTranslator
-
 import utils
 
 
 def translate(text, lang = 'ru'):
     """ Переводит text на язык lang с помощью утилиты trans. Возвращает None если не удалось перевести и текст перевода если удалось """
-    if 'windows' in utils.platform().lower():
-        return translate2(text, lang)
-
     process = subprocess.Popen(['trans', f':{lang}', '-b', text], stdout = subprocess.PIPE)
     output, error = process.communicate()
     r = output.decode('utf-8').strip()
     if error != None:
         return None
     return r
-
-
-def translate2(text, lang = 'ru'):
-    """ Возвращает None если не удалось перевести и текст перевода если удалось """
-    x = PyTranslator()
-    r = x.translate(text, lang)
-    if r['status'] == 'success':
-        return r['translation']
-    return None
 
 
 def count_russian_words_not_in_ukrainian_dict(text):

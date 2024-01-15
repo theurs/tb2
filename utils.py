@@ -142,6 +142,10 @@ def bot_markdown_to_html(text: str) -> str:
         random_string = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(16))
         list_of_code_blocks.append([match, random_string])
         text = text.replace(f'```{match}```', random_string)
+
+    # тут могут быть одиночные поворяющиеся `, меняем их на '
+    text = text.replace('```', "'''")
+
     matches = re.findall('`(.*?)`', text, flags=re.DOTALL)
     list_of_code_blocks2 = []
     for match in matches:
@@ -160,12 +164,8 @@ def bot_markdown_to_html(text: str) -> str:
         new_text += i + '\n'
     text = new_text.strip()
 
-    # 1 или 2 * в 3 звездочки
-    # *bum* -> ***bum***
-    # text = re.sub('\*\*?(.*?)\*\*?', '***\\1***', text)
+    # 1 или 2 * в <b></b>
     text = re.sub('\*\*(.+?)\*\*', '<b>\\1</b>', text)
-    # одиночные звезды невозможно нормально заменить Ж( как впрочем и пары
-    # text = re.sub('\*(.+?)\*', '<b>\\1</b>', text)
 
     # tex в unicode
     matches = re.findall("\$\$?(.*?)\$\$?", text, flags=re.DOTALL)
@@ -175,10 +175,12 @@ def bot_markdown_to_html(text: str) -> str:
         text = text.replace(f'${match}$', new_match)
 
     # меняем маркдаун ссылки на хтмл
-    # text = re.sub(r'\[([^]]+)\]\((https?://\S+)\)', r'<a href="\2">\1</a>', text)
     text = re.sub(r'\[([^\]]*)\]\(([^\)]*)\)', r'<a href="\2">\1</a>', text)
     # меняем все ссылки на ссылки в хтмл теге кроме тех кто уже так оформлен
     text = re.sub(r'(?<!<a href=")(https?://\S+)(?!">[^<]*</a>)', r'<a href="\1">\1</a>', text)
+
+    # меняем таблицы до возвращения кода
+    text = replace_tables(text)
 
     # меняем обратно хеши на блоки кода
     for match, random_string in list_of_code_blocks2:
@@ -193,7 +195,7 @@ def bot_markdown_to_html(text: str) -> str:
 
     text = replace_code_lang(text)
 
-    text = replace_tables(text)
+    # text = replace_tables(text)
 
     return text
 
@@ -224,6 +226,50 @@ def replace_code_lang(t: str) -> str:
             else:
                 result += i + '\n'
     return result
+
+
+def replace_tables(text: str) -> str:
+    text += '\n'
+    state = 0
+    table = ''
+    results = []
+    for line in text.split('\n'):
+        if line.count('|') > 2 and len(line) > 4:
+            if state == 0:
+                state = 1
+            table += line + '\n'
+        else:
+            if state == 1:
+                results.append(table[:-1])
+                table = ''
+                state = 0
+
+    for table in results:
+        x = prettytable.PrettyTable(align = "l",
+                                    set_style = prettytable.MSWORD_FRIENDLY,
+                                    hrules = prettytable.HEADER,
+                                    junction_char = '|')
+
+        lines = table.split('\n')
+        header = [x.strip().replace('<b>', '').replace('</b>', '') for x in lines[0].split('|') if x]
+        header = [split_long_string(x, header = True) for x in header]
+        try:
+            x.field_names = header
+        except Exception as error:
+            my_log.log2(f'tb:replace_tables: {error}')
+            continue
+        for line in lines[2:]:
+            row = [x.strip().replace('<b>', '').replace('</b>', '') for x in line.split('|') if x]
+            row = [split_long_string(x) for x in row]
+            try:
+                x.add_row(row)
+            except Exception as error2:
+                my_log.log2(f'tb:replace_tables: {error2}')
+                continue
+        new_table = x.get_string()
+        text = text.replace(table, f'<pre><code>{new_table}</code></pre>')
+
+    return text
 
 
 def split_html(text: str, max_length: int = 1500) -> list:
@@ -320,49 +366,6 @@ def split_long_string(long_string: str, header = False, MAX_LENGTH = 24) -> str:
     return result
 
 
-def replace_tables(text: str) -> str:
-    text += '\n'
-    state = 0
-    table = ''
-    results = []
-    for line in text.split('\n'):
-        if line.count('|') > 2 and len(line) > 4:
-            if state == 0:
-                state = 1
-            table += line + '\n'
-        else:
-            if state == 1:
-                results.append(table[:-1])
-                table = ''
-                state = 0
-
-    for table in results:
-        x = prettytable.PrettyTable(align = "l",
-                                    set_style = prettytable.MSWORD_FRIENDLY,
-                                    hrules = prettytable.HEADER,
-                                    junction_char = '|')
-        
-        lines = table.split('\n')
-        header = [x.strip().replace('<b>', '').replace('</b>', '') for x in lines[0].split('|') if x]
-        header = [split_long_string(x, header = True) for x in header]
-        try:
-            x.field_names = header
-        except Exception as error:
-            my_log.log2(f'tb:replace_tables: {error}')
-            continue
-        for line in lines[2:]:
-            row = [x.strip().replace('<b>', '').replace('</b>', '') for x in line.split('|') if x]
-            row = [split_long_string(x) for x in row]
-            try:
-                x.add_row(row)
-            except Exception as error2:
-                my_log.log2(f'tb:replace_tables: {error2}')
-                continue
-        new_table = x.get_string()
-        text = text.replace(table, f'<pre><code>{new_table}</code></pre>')
-
-    return text
-
 
 def download_image(url):
     """
@@ -409,6 +412,45 @@ def nice_hash(s: str, l: int = 12) -> str:
     """
     hash_object = hashlib.sha224(s.encode())
     return f'{hash_object.hexdigest()[:l]}'
+
+
+def mime_from_buffer(data: bytes) -> str:
+    """
+    Get the MIME type of the given buffer.
+
+    Parameters:
+        data (bytes): The buffer to get the MIME type of.
+
+    Returns:
+        str: The MIME type of the buffer.
+    """
+    pdf_signature = b'%PDF-1.'
+    epub_signature = b'%!PS-Adobe-3.0'
+    docx_signature = b'\x00\x00\x00\x0c'
+    doc_signature = b'PK\x03\x04'
+    html_signature = b'<!DOCTYPE html>'
+    odt_signature = b'<!DOCTYPE html>'
+    rtf_signature = b'<!DOCTYPE html>'
+    xlsx_signature = b'\x50\x4b\x03\x04'
+
+    if data.startswith(pdf_signature):
+        return 'application/pdf'
+    elif data.startswith(epub_signature):
+        return 'application/epub+zip'
+    elif data.startswith(docx_signature):
+        return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    elif data.startswith(doc_signature):
+        return 'application/msword'
+    elif data.startswith(html_signature):
+        return 'text/html'
+    elif data.startswith(odt_signature):
+        return 'application/vnd.oasis.opendocument.text'
+    elif data.startswith(rtf_signature):
+        return 'text/rtf'
+    elif data.startswith(xlsx_signature):
+        return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    else:
+        return 'plain'
 
 
 if __name__ == '__main__':
