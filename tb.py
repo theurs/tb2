@@ -122,12 +122,12 @@ supported_langs_tts = [
 
 
 class ShowAction(threading.Thread):
-    """Поток который можно остановить. Беспрерывно отправляет в чат уведомление об активности.
-    Телеграм автоматически гасит уведомление через 5 секунд, по-этому его надо повторять.
+    """A thread that can be stopped. Continuously sends a notification of activity to the chat.
+    Telegram automatically extinguishes the notification after 5 seconds, so it must be repeated.
 
-    Использовать в коде надо как то так
+    To use in the code, you need to do something like this:
     with ShowAction(message, 'typing'):
-        делаем что-нибудь и пока делаем уведомление не гаснет
+        do something and while doing it the notification does not go out
     """
     def __init__(self, message, action):
         """_summary_
@@ -143,6 +143,7 @@ class ShowAction(threading.Thread):
         assert action in self.actions, f'Допустимые actions = {self.actions}'
         self.chat_id = message.chat.id
         self.thread_id = message.message_thread_id
+        self.is_topic = True if message.is_topic_message else False
         self.action = action
         self.is_running = True
         self.timerseconds = 1
@@ -155,9 +156,13 @@ class ShowAction(threading.Thread):
                 my_log.log2(f'tb:show_action:stoped after 5min [{self.chat_id}] [{self.thread_id}] is topic: {self.is_topic} action: {self.action}')
                 return
             try:
-                bot.send_chat_action(self.chat_id, self.action, message_thread_id = self.thread_id)
+                if self.is_topic:
+                    bot.send_chat_action(self.chat_id, self.action, message_thread_id = self.thread_id)
+                else:
+                    bot.send_chat_action(self.chat_id, self.action)
             except Exception as error:
-                my_log.log2(f'tb:show_action: {error}')
+                if 'A request to the Telegram API was unsuccessful. Error code: 429. Description: Too Many Requests' not in str(error):
+                    my_log.log2(f'tb:show_action:run: {error}')
             n = 50
             while n > 0:
                 time.sleep(0.1)
