@@ -1229,20 +1229,40 @@ def image_thread(message: telebot.types.Message):
                         return
                     images = my_genimg.gen_images(prompt, moderation_flag)
                     if len(images) > 0:
-                        if 'error1_being_reviewed_prompt' in images[0]:
-                            bot_reply(message, 'Ваш запрос содержит потенциально неприемлемый контент.')
-                            return
-                        elif 'error1_blocked_prompt' in images[0]:
-                            bot_reply(message, 'Ваш запрос содержит неприемлемый контент.')
-                            return
-                        elif 'error1_unsupported_lang' in images[0]:
-                            bot_reply(message, 'Не понятный язык.')
-                            return
-                        elif 'error1_Bad images' in images[0]:
-                            bot_reply(message, 'Ваш запрос содержит неприемлемый контент.')
-                            return
+                        medias = []
+                        for i in images:
+                            if isinstance(i, str):
+                                if 'error1_being_reviewed_prompt' in i:
+                                    bot_reply_tr(message, 'Ваш запрос содержит потенциально неприемлемый контент.')
+                                    return
+                                elif 'error1_blocked_prompt' in i:
+                                    bot_reply_tr(message, 'Ваш запрос содержит неприемлемый контент.')
+                                    return
+                                elif 'error1_unsupported_lang' in i:
+                                    bot_reply_tr(message, 'Не понятный язык.')
+                                    return
+                                elif 'error1_Bad images' in i:
+                                    bot_reply_tr(message, 'Ваш запрос содержит неприемлемый контент.')
+                                    return
+                                if 'https://r.bing.com' in i:
+                                    continue
+
+                        d = None
+                        caption_ = prompt
+                        if isinstance(i, str):
+                            d = utils.download_image_as_bytes(i)
+                            caption_ = 'bing.com\n\n' + caption_
+                        elif isinstance(i, bytes):
+                            caption_ = 'dalle-3-xl\n\n' + caption_
+                            d = i
+                        if d:
+                            try:
+                                medias.append(telebot.types.InputMediaPhoto(d, caption = caption_))
+                            except Exception as add_media_error:
+                                error_traceback = traceback.format_exc()
+                                my_log.log2(f'tb:image_thread:add_media_bytes: {add_media_error}\n\n{error_traceback}')
+
                         with SEND_IMG_LOCK:
-                            medias = [telebot.types.InputMediaPhoto(i) for i in images if r'https://r.bing.com' not in i]
                             bot.send_media_group(message.chat.id, medias,
                                                 reply_to_message_id=message.message_id,
                                                 disable_notification=True)
@@ -1254,13 +1274,18 @@ def image_thread(message: telebot.types.Message):
                                                      link_preview_options=telebot.types.LinkPreviewOptions(is_disabled=False))
                                     bot.send_media_group(pics_group, medias)
                                 except Exception as error2:
-                                    print(error2)
                                     my_log.log2(error2)
 
                             my_log.log_echo(message, '[image gen] ')
 
                             # сохранить в отчет вопрос и ответ для юзера, и там же сохранение в группу
-                            my_log.log_report(bot, message, chat_id_full, message.from_user.id, f'/image {prompt}', '\n'.join(images))
+                            log_msg = '[Send images] '
+                            for x in images:
+                                if isinstance(x, str):
+                                    log_msg += x + ' '
+                                elif isinstance(x, bytes):
+                                    log_msg += f'[binary file {round(len(x)/1024)}kb] '
+                            my_log.log_report(bot, message, chat_id_full, message.from_user.id, f'/image {prompt}', log_msg)
 
                             n = [{'role':'system', 'content':f'user попросил нарисовать\n{prompt}'}, {'role':'system', 'content':'assistant нарисовал с помощью DALL-E'}]
                             if chat_id_full in DIALOGS_DB:
