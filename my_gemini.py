@@ -6,6 +6,7 @@ import base64
 import pickle
 import random
 import threading
+import traceback
 import requests
 
 import cfg
@@ -300,7 +301,7 @@ def get_mem_as_string(chat_id: str) -> str:
     return result    
 
 
-def translate(text: str, from_lang: str = '', to_lang: str = '') -> str:
+def translate(text: str, from_lang: str = '', to_lang: str = '', help: str = '') -> str:
     """
     Translates the given text from one language to another.
     
@@ -308,18 +309,33 @@ def translate(text: str, from_lang: str = '', to_lang: str = '') -> str:
         text (str): The text to be translated.
         from_lang (str, optional): The language of the input text. If not specified, the language will be automatically detected.
         to_lang (str, optional): The language to translate the text into. If not specified, the text will be translated into Russian.
+        help (str, optional): Help text for tranlator.
         
     Returns:
         str: The translated text.
     """
-    chat_id = 'translator_7356735198986'
     if from_lang == '':
         from_lang = 'autodetect'
     if to_lang == '':
         to_lang = 'ru'
-    query = f'Translate from language [{from_lang}] to language [{to_lang}]:\n\n{text}'
-    inject_explicit_content(chat_id)
-    translated = chat(query, chat_id)
+    try:
+        from_lang = langcodes.Language.make(language=from_lang).display_name(language='en') if from_lang != 'autodetect' else 'autodetect'
+    except Exception as error1:
+        error_traceback = traceback.format_exc()
+        my_log.log_translate(f'my_gemini:translate:error1: {error1}\n\n{error_traceback}')
+        
+    try:
+        to_lang = langcodes.Language.make(language=to_lang).display_name(language='en')
+    except Exception as error2:
+        error_traceback = traceback.format_exc()
+        my_log.log_translate(f'my_gemini:translate:error2: {error2}\n\n{error_traceback}')
+
+    if help:
+        query = f'Translate from language [{from_lang}] to language [{to_lang}], this can help you to translate better [{help}]:\n\n{text}'
+    else:
+        query = f'Translate from language [{from_lang}] to language [{to_lang}]:\n\n{text}'
+    # inject_explicit_content(chat_id)
+    translated = ai(query, temperature=0.1)
     return translated
 
 
