@@ -1253,7 +1253,7 @@ def image_thread(message: telebot.types.Message):
                             d = utils.download_image_as_bytes(i)
                             caption_ = 'bing.com\n\n' + caption_
                         elif isinstance(i, bytes):
-                            caption_ = 'dalle-3-xl\n\n' + caption_
+                            # caption_ = 'dalle-3-xl\n\n' + caption_
                             d = i
                         if d:
                             try:
