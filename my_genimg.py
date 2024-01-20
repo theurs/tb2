@@ -16,6 +16,9 @@ import my_gemini
 import my_log
 
 
+DEBUG = False
+
+
 def bing(prompt: str, moderation_flag: bool = False):
     """рисует 4 картинки с помощью далли и возвращает сколько смог нарисовать"""
     if moderation_flag:
@@ -109,7 +112,7 @@ def huggin_face_api(prompt: str) -> bytes:
             try:
                 response = requests.post(url, headers=headers, json=p, timeout=120, proxies=proxy)
             except Exception as error:
-                my_log.log2(f'my_genimg:huggin_face_api: {error}\nPrompt: {prompt}\nAPI key: {api_key}\nProxy: {proxy}\nURL: {url}')
+                my_log.log_huggin_face_api(f'my_genimg:huggin_face_api: {error}\nPrompt: {prompt}\nAPI key: {api_key}\nProxy: {proxy}\nURL: {url}')
                 continue
 
             resp_text = str(response.content)[:300]
@@ -120,7 +123,13 @@ def huggin_face_api(prompt: str) -> bytes:
                 result.append(response.content)
                 return result
 
-            my_log.log2(f'my_genimg:huggin_face_api: {resp_text} | {proxy} | {url}')
+            if 'is currently loading","estimated_time":' in str(resp_text) or \
+                '"error":"Internal Server Error"' in str(resp_text) or \
+                '"CUDA out of memory' in str(resp_text):
+                if DEBUG:
+                    my_log.log_huggin_face_api(f'my_genimg:huggin_face_api: {resp_text} | {proxy} | {url}')
+            else: # unknown error
+                my_log.log_huggin_face_api(f'my_genimg:huggin_face_api: {resp_text} | {proxy} | {url}')
             time.sleep(10)
 
         return result
@@ -130,8 +139,9 @@ def huggin_face_api(prompt: str) -> bytes:
     async_result2 = pool.apply_async(request_img, (prompt, API_URL[6], payload,))
     async_result3 = pool.apply_async(request_img, (prompt, API_URL[3], payload,))
     async_result4 = pool.apply_async(request_img, (prompt, API_URL[3], payload,))
-    # async_result5 = pool.apply_async(request_img, (prompt, API_URL[4], payload,))
-    result = async_result1.get() + async_result2.get() + async_result3.get() + async_result4.get() #+ async_result5.get()
+    async_result5 = pool.apply_async(request_img, (prompt, API_URL[0], payload,))
+    async_result6 = pool.apply_async(request_img, (prompt, API_URL[2], payload,))
+    result = async_result1.get() + async_result2.get() + async_result3.get() + async_result4.get() + async_result5.get() + async_result6.get()
 
     result = list(set(result))
 
