@@ -181,7 +181,6 @@ def get_images(prompt: str,
 
     normal_image_links = [x for x in normal_image_links if not x.startswith('https://r.bing.com/')]
     time.sleep(5)
-    my_log.log_bing_success(f'{u_cookie} {proxy} {prompt} {normal_image_links}')
     return normal_image_links
 
 
