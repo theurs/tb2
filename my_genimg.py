@@ -19,6 +19,10 @@ import my_log
 DEBUG = False
 
 
+# {hash of image:model name, ...}
+WHO_AUTOR = {}
+
+
 def bing(prompt: str, moderation_flag: bool = False):
     """рисует 4 картинки с помощью далли и возвращает сколько смог нарисовать"""
     if moderation_flag:
@@ -122,6 +126,7 @@ def huggin_face_api(prompt: str) -> bytes:
                 return []
             if response.content and '{"error"' not in resp_text:
                 result.append(response.content)
+                WHO_AUTOR[hash(response.content)] = url.split('/')[-1]
                 return result
 
             if 'is currently loading","estimated_time":' in str(resp_text) or \
