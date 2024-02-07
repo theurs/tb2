@@ -1230,8 +1230,15 @@ def image_thread(message: telebot.types.Message):
                     images = my_genimg.gen_images(prompt, moderation_flag)
                     if len(images) > 0:
                         medias = []
+                        has_good_images = False
+                        for x in images:
+                            if isinstance(x, bytes):
+                                has_good_images = True
+                                break
                         for i in images:
                             if isinstance(i, str):
+                                if i.startswith('error1_') and has_good_images:
+                                    continue
                                 if 'error1_being_reviewed_prompt' in i:
                                     bot_reply_tr(message, 'Ваш запрос содержит потенциально неприемлемый контент.')
                                     return
