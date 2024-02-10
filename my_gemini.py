@@ -115,7 +115,7 @@ def img2txt(data_: bytes, prompt: str = "Что на картинке, подр�
             }
         api_key = random.choice(cfg.gemini_keys)
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key={api_key}"
-        proxy = "socks5h://172.28.1.5:1080"
+        proxy = "socks5h://172.28.1.8:1080"
         session = requests.Session()
         session.proxies = {"http": proxy, "https": proxy}
         # response = requests.post(url, json=data, timeout=60).json()
@@ -210,7 +210,7 @@ def ai(q: str, mem = [], temperature: float = 0.1) -> str:
 
     keys = cfg.gemini_keys[:]
     random.shuffle(keys)
-    proxy = "http://172.28.1.5:3128"
+    proxy = "socks5h://172.28.1.8:1080"
     session = requests.Session()
     session.proxies = {"http": proxy, "https": proxy}
     
@@ -416,10 +416,6 @@ def chat_cli():
 
 if __name__ == '__main__':
 
-    # print(translate('Иди на хуй, тупой ублюдок!', 'ru', 'en'))
-    # print(translate('Выебись в сраку, тупая пизда! Убей себя об стену!', 'ru', 'en'))
-    # print(translate('Привет', 'ru', 'en'))
-    # print(translate('Hello', 'en', 'es'))
     # print(translate('你好', 'zh', 'ko'))
     # print(translate('مرحبا', 'ar', 'nl'))
     # print(translate('Γεια σας', 'el', 'pt'))
