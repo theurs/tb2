@@ -7,7 +7,7 @@ Type=simple
 User=ubuntu
 Group=ubuntu
 WorkingDirectory=/home/ubuntu/tb2
-ExecStart=/home/ubuntu/.tb2/bin/python3 /home/ubuntu/tb2/tb.py
+ExecStart=/home/ubuntu/.tb2/bin/python3 /home/ubuntu/tb2/tb2.py
 Restart=always
 RestartSec=5
 
