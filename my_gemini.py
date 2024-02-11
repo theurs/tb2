@@ -115,9 +115,9 @@ def img2txt(data_: bytes, prompt: str = "Что на картинке, подр�
             }
         api_key = random.choice(cfg.gemini_keys)
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key={api_key}"
-        proxy = "socks5h://172.28.1.8:1080"
+        # proxy = "socks5h://172.28.1.8:1080"
         session = requests.Session()
-        session.proxies = {"http": proxy, "https": proxy}
+        # session.proxies = {"http": proxy, "https": proxy}
         # response = requests.post(url, json=data, timeout=60).json()
         response = session.post(url, json=data, timeout=60).json()
 
@@ -210,9 +210,9 @@ def ai(q: str, mem = [], temperature: float = 0.1) -> str:
 
     keys = cfg.gemini_keys[:]
     random.shuffle(keys)
-    proxy = "socks5h://172.28.1.8:1080"
+    # proxy = "socks5h://172.28.1.8:1080"
     session = requests.Session()
-    session.proxies = {"http": proxy, "https": proxy}
+    # session.proxies = {"http": proxy, "https": proxy}
     
     for key in keys:
         url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + key
