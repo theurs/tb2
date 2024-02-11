@@ -90,8 +90,8 @@ def huggin_face_api(prompt: str) -> bytes:
         "https://api-inference.huggingface.co/models/stablediffusionapi/juggernaut-xl-v8",
         "https://api-inference.huggingface.co/models/stablediffusionapi/juggernaut-xl-v8",
 
-        "https://api-inference.huggingface.co/models/openskyml/dalle-3-xl",
-        "https://api-inference.huggingface.co/models/openskyml/dalle-3-xl",
+        "https://api-inference.huggingface.co/models/ehristoforu/dalle-3-xl",
+        "https://api-inference.huggingface.co/models/ehristoforu/dalle-3-xl",
         "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
 
         "https://api-inference.huggingface.co/models/cagliostrolab/animagine-xl-3.0",
