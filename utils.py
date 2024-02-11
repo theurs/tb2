@@ -133,7 +133,7 @@ def bot_markdown_to_html(text: str) -> str:
 
     # экранируем весь текст для html
     text = html.escape(text)
-    
+
     # найти все куски кода между ``` и заменить на хеши
     # спрятать код на время преобразований
     matches = re.findall('```(.*?)```\n', text, flags=re.DOTALL)
@@ -166,7 +166,7 @@ def bot_markdown_to_html(text: str) -> str:
         if ii.startswith('* '):
             i = i.replace('* ', '• ', 1)
         if ii.startswith('- '):
-            i = i.replace('- ', '• ', 1)
+            i = i.replace('- ', '– ', 1)
         new_text += i + '\n'
     text = new_text.strip()
 
@@ -183,7 +183,7 @@ def bot_markdown_to_html(text: str) -> str:
     # меняем маркдаун ссылки на хтмл
     text = re.sub(r'\[([^\]]*)\]\(([^\)]*)\)', r'<a href="\2">\1</a>', text)
     # меняем все ссылки на ссылки в хтмл теге кроме тех кто уже так оформлен
-    text = re.sub(r'(?<!<a href=")(https?://\S+)(?!">[^<]*</a>)', r'<a href="\1">\1</a>', text)
+    # а зачем собственно? text = re.sub(r'(?<!<a href=")(https?://\S+)(?!">[^<]*</a>)', r'<a href="\1">\1</a>', text)
 
     # меняем таблицы до возвращения кода
     text = replace_tables(text)
@@ -223,7 +223,7 @@ def replace_code_lang(t: str) -> str:
         else:
             if state == 1:
                 if i == '</code>':
-                    result += '</code></pre>'
+                    result += '</code></pre>\n'
                     state = 0
                 else:
                     result += i + '\n'
