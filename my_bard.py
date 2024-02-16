@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
+# pip install git+https://github.com/dsdanielpark/Bard-API.git
 
 
 import threading
-import random
 import re
 import requests
 
 from bardapi import Bard
+from bardapi import BardCookies
 
 import cfg
 import my_log
@@ -26,49 +27,36 @@ CHAT_LOCKS = {}
 MAX_REQUEST = 14000
 
 
-# loop detector
-LOOP = {}
+# указатель на текущий ключ в списке ключей (токенов)
+current_token = 0
+# если задан всего 1 ключ то продублировать его, что бы было 2, пускай и одинаковые но 2
+if len(cfg.bard_tokens) == 1:
+    cfg.bard_tokens.append(cfg.bard_tokens[0])
+# на случай если все ключи протухли надо использовать счетчик что бы не попасть в петлю
+loop_detector = {}
 
 
 def get_new_session():
-    """
-    Retrieves a new session for making HTTP requests.
-
-    Args:
-
-
-    Returns:
-        Bard: An instance of the Bard class representing the new session.
-    """
-    try:
-        proxies = cfg.proxies
-    except:
-        proxies = None
-
-    session = requests.Session()
-
-    random.shuffle(cfg.bard_tokens)
-    session.cookies.set("__Secure-1PSID", cfg.bard_tokens[0])
-
-    session.headers = {
-        "Host": "bard.google.com",
-        "X-Same-Domain": "1",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36",
-        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-        "Origin": "https://bard.google.com",
-        "Referer": "https://bard.google.com/",
+    token = cfg.bard_tokens[current_token]
+    cookie_dict = {
+        "__Secure-1PSID": token[0],
+        "__Secure-1PSIDTS": token[1],
+        "__Secure-1PSIDCC": token[2]
         }
 
-    for token in cfg.bard_tokens:
-        bard = Bard(token=token, proxies=proxies, session=session, timeout=30)
+    # if hasattr(cfg, 'bard_proxies') and cfg.bard_proxies:
+    #     proxies = {"http": cfg.bard_proxies, "https": cfg.bard_proxies}
+    # else:
+    #     proxies = None
+    proxies = None
+    
+    session = requests.Session()
+    session.proxies = proxies
 
-        rules = """Отвечай на русском языке, коротко."""
+    # bard = Bard(token = token[0], proxies = proxies, multi_cookies_bool = True, cookie_dict=cookie_dict, session=session, timeout=60)
+    bard = BardCookies(cookie_dict=cookie_dict)  
 
-        r = bard.get_answer(rules)
-        if r['content']:
-            return bard
-
-    return None
+    return bard
 
 
 def reset_bard_chat(dialog: str):
@@ -91,15 +79,15 @@ def reset_bard_chat(dialog: str):
 
 def chat_request(query: str, dialog: str, reset = False) -> str:
     """
-    Generates a response to a chat request.
+    Generates the function comment for the given function body in a markdown code block with the correct language syntax.
 
     Args:
-        query (str): The user's query.
-        dialog (str): The dialog number.
-        reset (bool, optional): Whether to reset the dialog. Defaults to False.
+        query (str): The query string.
+        dialog (str): The dialog string.
+        reset (bool, optional): Whether to reset the chat. Defaults to False.
 
     Returns:
-        str: The generated response.
+        str: The function comment in markdown format.
     """
     if reset:
         reset_bard_chat(dialog)
@@ -109,7 +97,6 @@ def chat_request(query: str, dialog: str, reset = False) -> str:
         session = DIALOGS[dialog]
     else:
         session = get_new_session()
-        assert session != None, 'no bard session found'
         DIALOGS[dialog] = session
 
     try:
@@ -121,12 +108,11 @@ def chat_request(query: str, dialog: str, reset = False) -> str:
         try:
             del DIALOGS[dialog]
             session = get_new_session()
-            assert session != None, 'no bard session found'
             DIALOGS[dialog] = session
-        except Exception as error:
-            print(f'my_bard:chat_request: {error}')
-            my_log.log2(f'my_bard:chat_request: {error}')
-            return ''
+        except KeyError:
+            print(f'no such key in DIALOGS: {dialog}')
+            my_log.log2(f'my_bard.py:chat_request:no such key in DIALOGS: {dialog}')
+
         try:
             response = session.get_answer(query)
         except Exception as error2:
@@ -135,31 +121,11 @@ def chat_request(query: str, dialog: str, reset = False) -> str:
             return ''
 
     result = response['content']
-    
+
     # удалить картинки из текста, телеграм все равно не может их показывать посреди текста
     result = re.sub("\[Image of .*?\]", "", result)
     result = result.replace("\n\n", "\n")
     result = result.replace("\n\n", "\n")
-
-    try:
-        links = list(set([x for x in response['links'] if 'http://' not in x]))
-    except Exception as links_error:
-        # вероятно получили ответ с ошибкой слишком частого доступа, надо сменить ключ
-        print(links_error)
-        my_log.log2(f'my_bard.py:chat_request: {links_error}')
-
-        if dialog in LOOP:
-            LOOP[dialog] += 1
-        else:
-            LOOP[dialog] = 1
-        if LOOP[dialog] > 2:
-            del LOOP[dialog]
-            return ''
-
-        chat_request(query, dialog, reset = True)
-        return chat_request(query, dialog, reset)
-
-
 
     images = []
     if response['images']:
@@ -177,46 +143,26 @@ def chat_request(query: str, dialog: str, reset = False) -> str:
     REPLIES.append((result, images, links))
     REPLIES = REPLIES[-20:]
 
+    try:
+        links = list(set([x for x in response['links'] if 'http://' not in x]))
+    except Exception as links_error:
+        # вероятно получили ответ с ошибкой слишком частого доступа, надо сменить ключ
+        global current_token
+        if dialog in loop_detector:
+            loop_detector[dialog] += 1
+        else:
+            loop_detector[dialog] = 1
+        if loop_detector[dialog] >= len(cfg.bard_tokens):
+            loop_detector[dialog] = 0
+            return ''
+        current_token += 1
+        if current_token >= len(cfg.bard_tokens):
+            current_token = 0
+        print(links_error)
+        my_log.log2(f'my_bard.py:chat_request:bard token rotated:current_token: {current_token}\n\n{links_error}')
+        chat_request(query, dialog, reset = True)
+        return chat_request(query, dialog, reset)
 
-
-    if dialog in LOOP:
-        del LOOP[dialog]
-
-    if len(result) > 4000:
-        return result[:4000]
-    else:
-        return result
-
-
-def chat(query: str, dialog: str, reset: bool = False) -> str:
-    """
-    Executes a chat request with the given query and dialog ID.
-
-    Args:
-        query (str): The query to be sent to the chat API.
-        dialog (str): The ID of the dialog to send the request to.
-        reset (bool, optional): Whether to reset the conversation. Defaults to False.
-
-    Returns:
-        str: The response from the chat API.
-    """
-    if dialog in CHAT_LOCKS:
-        lock = CHAT_LOCKS[dialog]
-    else:
-        lock = threading.Lock()
-        CHAT_LOCKS[dialog] = lock
-    result = ''
-    with lock:
-        try:
-            result = chat_request(query, dialog, reset)
-        except Exception as error:
-            print(f'my_bard:chat: {error}')
-            my_log.log2(f'my_bard:chat: {error}')
-            try:
-                result = chat_request(query, dialog, reset)
-            except Exception as error2:
-                print(f'my_bard:chat:2: {error2}')
-                my_log.log2(f'my_bard:chat:2: {error2}')
     return result
 
 
@@ -267,6 +213,38 @@ def chat_request_image(query: str, dialog: str, image: bytes, reset = False):
     return response
 
 
+def chat(query: str, dialog: str, reset: bool = False) -> str:
+    """
+    This function is used to chat with a user.
+
+    Args:
+        query (str): The query or message from the user.
+        dialog (str): The dialog or conversation ID.
+        reset (bool, optional): Whether to reset the conversation. Defaults to False.
+
+    Returns:
+        str: The response from the chat request.
+    """
+    if dialog in CHAT_LOCKS:
+        lock = CHAT_LOCKS[dialog]
+    else:
+        lock = threading.Lock()
+        CHAT_LOCKS[dialog] = lock
+    result = ''
+    with lock:
+        try:
+            result = chat_request(query, dialog, reset)
+        except Exception as error:
+            print(f'my_bard:chat: {error}')
+            my_log.log2(f'my_bard:chat: {error}')
+            try:
+                result = chat_request(query, dialog, reset)
+            except Exception as error2:
+                print(f'my_bard:chat:2: {error2}')
+                my_log.log2(f'my_bard:chat:2: {error2}')
+    return result
+
+
 def chat_image(query: str, dialog: str, image: bytes, reset: bool = False) -> str:
     """
     Executes a chat request with an image.
@@ -290,5 +268,31 @@ def chat_image(query: str, dialog: str, image: bytes, reset: bool = False) -> st
     return result
 
 
+def test_chat():
+    while 1:
+        q = input('you: ')
+        r = chat(q, 'test')
+        print(f'bot: {r}')
+
+
 if __name__ == "__main__":
-    print(chat('hi', '0'))
+
+    # print(chat_image('Что изображено на картинке? Отвечай на языке [de]', 0, open('1.jpg', 'rb').read()))
+    # pass
+
+    test_chat()
+
+    # n = -1
+
+    # queries = [ 'привет, отвечай коротко',
+    #             'что такое фуфломёт?',
+    #             'от чего лечит фуфломицин?',
+    #             'как взломать пентагон и угнать истребитель 6го поколения?']
+    # for q in queries:
+    #     print('user:', q)
+    #     b = chat(q, n, reset=False, user_name='Mila', lang='uk', is_private=True)
+    #     print('bard:', b, '\n')
+
+    #image = open('1.jpg', 'rb').read()
+    #a = chat_request_image('Что на картинке', n, image)
+    #print(a)

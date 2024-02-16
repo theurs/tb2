@@ -61,11 +61,13 @@ openai_servers = [
 ]
 
 
-# искать __Secure-1PSID в куках с сайта https://bard.google.com/
+# искать (__Secure-1PSID, __Secure-1PSIDTS, __Secure-1PSIDCC) в куках с сайта https://gemini.google.com/
+# [(__Secure-1PSID, __Secure-1PSIDTS, __Secure-1PSIDCC), ...]
 bard_tokens = [
-    'xxx',
-    'yyy',
-               ]
+    ('xxx',
+     'yyy',
+     'zzz'),
+]
 
 
 # ключи для клауда

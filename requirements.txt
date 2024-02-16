@@ -1,5 +1,5 @@
 attrs==23.1.0
-bardapi==0.1.32
+bardapi
 bs4
 chardet
 # claude-api
