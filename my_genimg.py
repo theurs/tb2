@@ -10,6 +10,7 @@ from multiprocessing.pool import ThreadPool
 
 import langdetect
 import requests
+from sqlitedict import SqliteDict
 
 import cfg
 import bing_img
@@ -22,6 +23,12 @@ DEBUG = False
 
 # {hash of image:model name, ...}
 WHO_AUTOR = {}
+
+
+# kandinski hashes
+# запоминаем все хеши, и если они повторяются (скорее всего это заглушка) то не показываем
+# {hash of image:count, ...}
+kandinski_hashes = SqliteDict('db/kandinski_hashes.db', autocommit=True)
 
 
 def bing(prompt: str, moderation_flag: bool = False):
@@ -214,6 +221,12 @@ def kandinski(prompt: str, width: int = 1024, height: int = 1024, num: int = 1):
             results = []
             for image in images:
                 data = base64.b64decode(image)
+                h_ = hash(data)
+                if h_ in kandinski_hashes:
+                    kandinski_hashes[h_] = kandinski_hashes[h_] + 1
+                    continue
+                else:
+                    kandinski_hashes[h_] = 1
                 WHO_AUTOR[hash(data)] = 'fusionbrain.ai'
                 results.append(data)
             return results
