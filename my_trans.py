@@ -17,6 +17,7 @@ def translate(text, lang = 'ru'):
     if error != None:
         return None
     return r
+translate_text2 = translate
 
 
 def count_russian_words_not_in_ukrainian_dict(text):

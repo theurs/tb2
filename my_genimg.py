@@ -78,40 +78,6 @@ def ddg_search_images(prompt: str, max_results: int = 10):
     return result[:max_results]
 
 
-def wizmodel_com(prompt: str):
-    if not hasattr(cfg, 'WIZMODEL_API') or not cfg.WIZMODEL_API:
-        return []
-
-    url = "https://api.wizmodel.com/v1/predictions"
-    
-    if cfg.bing_proxy:
-        proxy = {'http': random.choice(cfg.bing_proxy), 'https': random.choice(cfg.bing_proxy)}
-    else:
-        proxy = None
-
-    payload = json.dumps({
-        "input": {
-            "prompt": prompt
-            },
-        "version": "7d229e3ed5d01c879622d0cd273572260b7e35103d6765af740f853b160d04b7"
-        }
-                         )
-
-    api_key = random.choice(cfg.WIZMODEL_API[0])
-    headers = {
-        'Content-Type': 'application/json',
-        'Authorization': f'Bearer {api_key}'
-        }
-
-    try:
-        response = requests.request("POST", url, headers=headers, data=payload, timeout = 200, proxies=proxy)
-    except Exception as error:
-        my_log.log2(f'my_genimg:wizmodel_com: {error}\n\nPrompt: {prompt}')
-        return []
-
-    return response.text
-
-
 def translate_prompt_to_en(prompt: str) -> str:
     """
     Translates a given prompt to English if it is not already in English.
@@ -158,95 +124,6 @@ def rewrite_prompt_for_open_dalle(prompt: str) -> str:
         return translate_prompt_to_en(prompt_translated)
     else:
         return prompt
-
-
-def stable_duffision_api(prompt: str):
-    """
-    Requests an image from the Stable Diffusion API using the provided prompt.
-
-    Args:
-        prompt (str): The prompt for generating the image.
-
-    Returns:
-        list[str]: A list containing the URL of the generated image if successful, otherwise an empty list.
-    """
-    try:
-        if hasattr(cfg, 'STABLE_DIFFUSION_API') and cfg.STABLE_DIFFUSION_API:
-            if prompt in NFSW_CONTENT:
-                return []
-            url = "https://stablediffusionapi.com/api/v3/text2img"
-
-            prompt = translate_prompt_to_en(prompt)
-
-            api_keys = cfg.STABLE_DIFFUSION_API[:]
-            random.shuffle(api_keys)
-            for api_key in api_keys:
-                payload = json.dumps({
-                    "key": api_key,
-                    "prompt": prompt,
-                    "negative_prompt": None,
-                    "width": "1024",
-                    "height": "1024",
-                    "samples": "1",
-                    "num_inference_steps": "20",
-                    "seed": None,
-                    "guidance_scale": 7.5,
-                    "safety_checker": "yes",
-                    "multi_lingual": "no",
-                    "panorama": "no",
-                    "self_attention": "no",
-                    "upscale": "no",
-                    "embeddings_model": None,
-                    "webhook": None,
-                    "track_id": None
-                })
-                headers = {
-                'Content-Type': 'application/json'
-                }
-                response = requests.request("POST", url, headers=headers, data=payload, timeout=60)
-                response_json = json.loads(response.text)
-
-                # Get the fields from the JSON response
-                status = response_json["status"]
-                if status == "success":
-                    # generation_time = response_json["generationTime"]
-                    # request_id = response_json["id"]
-                    image_url = response_json["output"][0]
-                    # proxy_link = response_json["proxy_links"][0]
-                    nsfw_content_detected = response_json["nsfw_content_detected"]
-                    if nsfw_content_detected:
-                        NFSW_CONTENT[prompt] = nsfw_content_detected
-                        return []
-                    # meta = response_json["meta"]
-
-                    # Extract the meta fields
-                    # image_height = meta["H"]
-                    # image_width = meta["W"]
-                    # enable_attention_slicing = meta["enable_attention_slicing"]
-                    # file_prefix = meta["file_prefix"]
-                    # guidance_scale = meta["guidance_scale"]
-                    # instant_response = meta["instant_response"]
-                    # model_name = meta["model"]
-                    # num_samples = meta["n_samples"]
-                    # negative_prompt = meta["negative_prompt"]
-                    # output_directory = meta["outdir"]
-                    # prompt = meta["prompt"]
-                    # model_revision = meta["revision"]
-                    # safety_checker = meta["safetychecker"]
-                    # seed = meta["seed"]
-                    # steps = meta["steps"]
-                    # temperature = meta["temp"]
-                    # vae_model = meta["vae"]
-                    return [image_url,]
-                else:
-                    try:
-                        my_log.log_stable_diffusion_api(f'{response_json}\n\nStatus: {status}\nMessage: {response_json["message"]}\nPrompt: {prompt}\nAPI key: {api_key}')
-                    except:
-                        my_log.log_stable_diffusion_api(f'{response_json}\n\nPrompt: {prompt}\nAPI key: {api_key}')
-    except Exception as unknown:
-        error_traceback = traceback.format_exc()
-        my_log.log2(f'my_genimg:stable_diffusion_api: {str(unknown)}\n\n{error_traceback}')
-    return []
 
 
 def huggin_face_api(prompt: str) -> bytes:
