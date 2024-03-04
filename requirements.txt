@@ -9,6 +9,7 @@ edge_tts
 fake_useragent
 fuzzywuzzy
 google
+gradio_client
 langcodes[data]
 langdetect
 openai==0.28.0
