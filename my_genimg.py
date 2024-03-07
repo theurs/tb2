@@ -224,7 +224,6 @@ def huggin_face_api(prompt: str) -> bytes:
     return result
 
 
-
 def playground25(prompt: str, url: str) -> bytes:
     """
     url = "playgroundai/playground-v2.5-1024px-aesthetic" only?
