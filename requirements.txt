@@ -15,6 +15,7 @@ langdetect
 openai==0.28.0
 openpyxl
 pandas
+Pillow
 prettytable
 pyenchant
 pylatexenc
