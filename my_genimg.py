@@ -519,8 +519,6 @@ Repromt user's prompt for image generation.
 Generate a good detailed prompt in english language, image generator accept only english so translate if needed.
 
 User's prompt: {prompt}
-
-Dialog history: {conversation_history}
 """
     reprompt = my_gemini.ai(query, temperature=1.2)
     my_log.log_reprompts(f'{prompt}\n\n{reprompt}')
