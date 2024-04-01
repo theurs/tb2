@@ -145,15 +145,13 @@ def huggin_face_api(prompt: str) -> bytes:
         API_URL = cfg.huggin_face_models_urls
     else:
         API_URL = [
-            # "https://api-inference.huggingface.co/models/stablediffusionapi/juggernaut-xl-v8",
             "https://api-inference.huggingface.co/models/ehristoforu/dalle-3-xl-v2",
-            # "https://api-inference.huggingface.co/models/ehristoforu/dalle-3-xl",
             'AP123/SDXL-Lightning',
-            #'AP123/SDXL-Lightning',
-            # 'playgroundai/playground-v2.5-1024px-aesthetic',
             'playgroundai/playground-v2.5-1024px-aesthetic',
             "multimodalart/stable-cascade",
+            "https://api-inference.huggingface.co/models/digiplay/Juggernaut_final",
             "https://api-inference.huggingface.co/models/dataautogpt3/TempestV0.1",
+            # "https://api-inference.huggingface.co/models/cagliostrolab/animagine-xl-3.1",
         ]
 
     prompt_ = prompt
@@ -448,7 +446,60 @@ def kandinski(prompt: str, width: int = 1024, height: int = 1024, num: int = 1):
 
     except Exception as error:
         error_traceback = traceback.format_exc()
-        my_log.log2(f'my_genimg:kandinski: {error}\n\n{error_traceback}')
+        my_log.log_huggin_face_api(f'my_genimg:kandinski: {error}\n\n{error_traceback}')
+
+
+def stability_ai(prompt: str = 'An australian cat', amount: int = 1):
+    """
+    Generate stable image using stability.ai API.
+
+    Args:
+        prompt (str): The prompt for generating the stable image.
+        amount (int): The number of stable images to generate.
+
+    Returns:
+        List: A list of stable images generated.
+    """
+    if amount > 1:
+        result = []
+        for i in range(amount):
+            result.append(stability_ai(prompt, 1))
+        return result
+
+    try:
+        if hasattr(cfg, 'STABILITY_API') and cfg.STABILITY_API:
+
+            keys = cfg.STABILITY_API[:]
+            random.shuffle(keys)
+            key = keys[0]
+
+            response = requests.post(
+                f"https://api.stability.ai/v2beta/stable-image/generate/core",
+                headers={
+                    "authorization": f"Bearer {key}",
+                    "accept": "image/*"
+                },
+                files={
+                    "none": ''
+                },
+                data={
+                    "prompt": prompt,
+                    "output_format": "webp",
+                },
+                timeout=90,
+            )
+
+            if response.status_code == 200:
+                WHO_AUTOR[hash(response.content)] = 'stability.ai'
+                return [response.content, ]
+            else:
+                raise Exception(str(response.json()))
+    except Exception as error:
+        if not ('api.stability.ai' in str(error) and 'Read timed out' in str(error)):
+            error_traceback = traceback.format_exc()
+            my_log.log_huggin_face_api(f'my_genimg:stability_ai: {error}\n\n{error_traceback}')
+
+    return []
 
 
 def gen_images(prompt: str, moderation_flag: bool = False, user_id: str = ''):
@@ -465,9 +516,12 @@ def gen_images(prompt: str, moderation_flag: bool = False, user_id: str = ''):
     
     async_result3 = pool.apply_async(kandinski, (prompt,))
     
-    async_result4 = pool.apply_async(kandinski, (prompt,))
+    # async_result4 = pool.apply_async(kandinski, (prompt,))
 
-    result = async_result1.get() + async_result2.get() + async_result3.get() + async_result4.get()
+    async_result5 = pool.apply_async(stability_ai, (prompt,))
+    async_result6 = pool.apply_async(stability_ai, (prompt,))
+
+    result = async_result1.get() + async_result5.get() + async_result6.get() + async_result2.get() + async_result3.get()
 
     return result[:10]
 
