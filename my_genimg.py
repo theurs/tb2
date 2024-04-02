@@ -170,13 +170,13 @@ def huggin_face_api(prompt: str) -> bytes:
         if 'playgroundai/playground-v2.5-1024px-aesthetic' in url:
             try:
                 return playground25(prompt, url)
-            except exception as error:
+            except Exception as error:
                 my_log.log_huggin_face_api(f'my_genimg:playgroundai/playground-v2.5-1024px-aesthetic: {error}\nPrompt: {prompt}\nURL: {url}')
                 return []
         if 'AP123/SDXL-Lightning' in url:
             try:
                 return SDXL_Lightning(prompt, url)
-            except exception as error:
+            except Exception as error:
                 my_log.log_huggin_face_api(f'my_genimg:AP123/SDXL-Lightning: {error}\nPrompt: {prompt}\nURL: {url}')
                 return []
 
@@ -544,9 +544,9 @@ def gen_images(prompt: str, moderation_flag: bool = False, user_id: str = ''):
     async_result1 = pool.apply_async(bing, (prompt, moderation_flag, user_id))
 
     async_result2 = pool.apply_async(huggin_face_api, (prompt,))
-    
+
     async_result3 = pool.apply_async(kandinski, (prompt,))
-    
+
     # async_result4 = pool.apply_async(kandinski, (prompt,))
 
     async_result5 = pool.apply_async(stability_ai, (prompt,))
