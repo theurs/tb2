@@ -12,6 +12,7 @@ google
 gradio_client
 langcodes[data]
 langdetect
+opencv-python
 openai==0.28.0
 openpyxl
 pandas
