@@ -25,7 +25,10 @@ SAVE_LOCK = threading.Lock()
 MAX_REQUEST = 14000
 
 # максимальный размер истории (32к ограничение Google?)
-MAX_CHAT_SIZE = 25000
+MAX_CHAT_SIZE = 20000
+# сколько последних запросов помнить, для экономии токенов (Должно быть >2 и кратно 2)
+# 20 - значит помнить последние 10 запросов и ответов
+MAX_CHAT_LINES = 20
 
 
 # можно сделать 2 запроса по 15000 в сумме получится запрос размером 30000
@@ -159,6 +162,7 @@ def update_mem(query: str, resp: str, mem) -> list:
             for x in mem:
                 text = x['parts'][0]['text']
                 size += len(text)
+        mem = mem[-MAX_CHAT_LINES:]
         if chat_id:
             CHATS[chat_id] = mem
             save_memory_to_file()
