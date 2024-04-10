@@ -581,14 +581,18 @@ def yandex_cloud_generate_image_async(iam_token: str, prompt: str, seed=None, ti
         if response.status_code == 200:
             url = f" https://llm.api.cloud.yandex.net:443/operations/{response.json()['id']}"
             while timeout > 0:
-                timeout -= 10
-                response = requests.get(url, headers=headers, timeout=10)
-                time.sleep(10)
-                if response.status_code == 200:
-                    if hasattr(response, 'text'):
-                        response = response.json()
-                        if response['done']:
-                            return response['response']['image']
+                try:
+                    response = requests.get(url, headers=headers, timeout=20)
+                    if response.status_code == 200:
+                        if hasattr(response, 'text'):
+                            response = response.json()
+                            if response['done']:
+                                return response['response']['image']
+                except Exception as error2:
+                    error_traceback2 = traceback.format_exc()
+                    my_log.log_huggin_face_api(f'my_genimg:yandex_cloud_generate_image_async: {error2}\n\n{error_traceback2}')
+                time.sleep(20)
+                timeout -= 20
         else:
             print(f"Ошибка: {response.status_code}")
     except Exception as error:
@@ -631,6 +635,7 @@ def get_reprompt(prompt: str, conversation_history: str) -> str:
 User want to create image with text to image generator.
 Repromt user's prompt for image generation.
 Generate a good detailed prompt in english language, image generator accept only english so translate if needed.
+Answer very short but completely grammatically correct and future rich.
 
 User's prompt: {prompt}
 """
