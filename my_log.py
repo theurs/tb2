@@ -43,6 +43,24 @@ def log_huggin_face_api(text: str) -> None:
         open(log_file_path, 'a', encoding="utf-8").write(f'{time_now}\n\n{text}\n{"=" * 80}\n')
 
 
+def log_bing_success(text: str) -> None:
+    """для логов от hugging_face_api"""
+    global lock
+    with lock:
+        time_now = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
+        log_file_path = 'logs/debug_bing_success.log'
+        open(log_file_path, 'a', encoding="utf-8").write(f'{time_now}\n\n{text}\n{"=" * 80}\n')
+
+
+def log_bing_img(text: str) -> None:
+    """для логов от hugging_face_api"""
+    global lock
+    with lock:
+        time_now = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
+        log_file_path = 'logs/debug_bing_img.log'
+        open(log_file_path, 'a', encoding="utf-8").write(f'{time_now}\n\n{text}\n{"=" * 80}\n')
+
+
 def log_reprompts(text: str) -> None:
     """для логов переводов промптов для рисования"""
     global lock

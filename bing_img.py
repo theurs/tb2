@@ -9,12 +9,15 @@ import re
 import requests
 from sqlitedict import SqliteDict
 from fake_useragent import UserAgent
+from bingart import BingArt
 
 import cfg
 import my_log
 
 
-# BIG_LOCK = threading.Lock()
+# {cookie str: threading.Lock()}
+COOKIE_LOCKS = {}
+
 
 # limit user to 3 concurrent requests
 # {id: threading.Semaphore(3)}
@@ -68,7 +71,7 @@ def get_external_ip(proxy):
 def get_images(prompt: str,
                u_cookie: str,
                proxy: str = None,
-               timeout: int = 200,
+               timeout: int = 60,
                max_generate_time_sec: int = 60):
     """
     Retrieves a list of normal image links from Bing search based on a given prompt.
@@ -181,7 +184,39 @@ def get_images(prompt: str,
 
     normal_image_links = [x for x in normal_image_links if not x.startswith('https://r.bing.com/')]
     time.sleep(5)
+    my_log.log_bing_success(f'{u_cookie} {proxy} {prompt} {normal_image_links}')
     return normal_image_links
+
+
+def get_images_v2(prompt: str,
+               u_cookie: str,
+               proxy: str = None,
+               timeout: int = 60,
+               max_generate_time_sec: int = 60):
+
+    results = []
+    cookies = [x for x in COOKIE.items()]
+    if cookies:
+        c = random.choice(cookies)[0]
+        if c not in COOKIE_LOCKS:
+            COOKIE_LOCKS[c] = threading.Lock()
+
+        with COOKIE_LOCKS[c]:
+            bing_art = BingArt(auth_cookie_U=c)
+            try:
+                results = bing_art.generate_images(prompt)
+            except Exception as error:
+                if 'Your prompt has been rejected' in str(error):
+                    BAD_IMAGES_PROMPT[prompt] = True
+                my_log.log_bing_img(f'get_images_v2: {error} \n\n {c} \n\nPrompt: {prompt}')
+            finally:
+                bing_art.close_session()
+
+    if results:
+        results = [image['url'] for image in results['images']]
+        my_log.log_bing_success(f'{u_cookie}\n{proxy}\n{prompt}\n{results}')
+
+    return results
 
 
 def gen_images(query: str, user_id: str = ''):
@@ -206,7 +241,7 @@ def gen_images(query: str, user_id: str = ''):
         # print(user_id, USER_LOCKS[user_id]._value)
     # with BIG_LOCK:
         if query in BAD_IMAGES_PROMPT:
-            my_log.log2(f'get_images: {query} is in BAD_IMAGES_PROMPT')
+            my_log.log_bing_img(f'get_images: {query} is in BAD_IMAGES_PROMPT')
             return ['error1_Bad images',]
 
         # сортируем куки по количеству обращений к ним
@@ -220,45 +255,38 @@ def gen_images(query: str, user_id: str = ''):
             with LOCKS[cookie]:
                 # сразу обновляем счетчик чтоб этот ключ ушел вниз списка
                 COOKIE[cookie] += 1
-                if cfg.bing_proxy:
-                    for proxy in cfg.bing_proxy:
+                if hasattr(cfg, 'bing_proxy') and cfg.bing_proxy:
+                    proxies = cfg.bing_proxy[:]
+                    random.shuffle(proxies)
+                    for proxy in proxies:
                         try:
-                            # my_log.log2(f'bing_img:gen_images: key {cookie[:5]} proxy {proxy} used times {COOKIE[cookie]}')
-                            return get_images(query, cookie, proxy)
+                            # return get_images(query, cookie, proxy)
+                            return get_images_v2(query, cookie, proxy)
                         except Exception as error:
-                            if 'location' in str(error):
-                                my_log.log2(f'get_images: {error} Cookie: {cookie} Proxy: {proxy}')
-                                break
-                            # if 'location' in str(error):
-                            #     my_log.log2(f'get_images: {error} Cookie: {cookie} Proxy: {proxy}')
-                            #     return []
-                            # else:
-                            #     my_log.log2(f'get_images: {error}\n\nQuery: {query}\n\nCookie: {cookie}\n\nProxy: {proxy}')
+                            if 'location' in str(error) or 'timeout' in str(error) or 'Out of generate time' in str(error):
+                                my_log.log_bing_img(f'get_images: {error} Cookie: {cookie} Proxy: {proxy}')
+                                return []
                             if str(error).startswith('error1'):
                                 BAD_IMAGES_PROMPT[query] = True
                                 return [str(error),]
                             else:
-                                my_log.log2(f'get_images: {error}\n\nQuery: {query}\n\nCookie: {cookie}\n\nProxy: {proxy}')
+                                my_log.log_bing_img(f'get_images: {error}\n\nQuery: {query}\n\nCookie: {cookie}\n\nProxy: {proxy}')
                 else:
                     try:
-                        return get_images(query, cookie)
+                        # return get_images(query, cookie)
+                        return get_images_v2(query, cookie)
                     except Exception as error:
-                        if 'location' in str(error):
-                            my_log.log2(f'get_images: {error} Cookie: {cookie} Proxy: {proxy}')
-                            break
-                        # if 'location' in str(error):
-                        #         my_log.log2(f'get_images: {error} Cookie: {cookie}')
-                        #         break
-                        # else:
-                        #     my_log.log2(f'get_images: {error}\n\nQuery: {query}\n\nCookie: {cookie}')
+                        if 'location' in str(error) or 'timeout' in str(error) or 'Out of generate time' in str(error):
+                            my_log.log_bing_img(f'get_images: {error} Cookie: {cookie}')
+                            return []
                         if str(error).startswith('error1'):
                             BAD_IMAGES_PROMPT[query] = True
                             return []
                         else:
-                            my_log.log2(f'get_images: {error}\n\nQuery: {query}\n\nCookie: {cookie}\n\nProxy: {proxy}')
+                            my_log.log_bing_img(f'get_images: {error}\n\nQuery: {query}\n\nCookie: {cookie}')
 
         return []
 
 
 if __name__ == '__main__':
-    print(gen_images('wolf face big'))
+    print(gen_images('вкусный торт с медом и орехами'))
