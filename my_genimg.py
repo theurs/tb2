@@ -663,14 +663,16 @@ def gen_images(prompt: str, moderation_flag: bool = False, user_id: str = ''):
 
     async_result1 = pool.apply_async(bing, (prompt, moderation_flag, user_id))
 
-    async_result2 = pool.apply_async(huggin_face_api, (prompt,))
-
+    async_result2 = pool.apply_async(kandinski, (prompt,))
     async_result3 = pool.apply_async(kandinski, (prompt,))
-    
-    #async_result4 = pool.apply_async(yandex_cloud, (prompt,))
 
-    #result = (async_result1.get() or []) + (async_result3.get() or []) + (async_result4.get() or []) + (async_result2.get() or [])
-    result = (async_result1.get() or []) + (async_result3.get() or []) + (async_result2.get() or [])
+    async_result4 = pool.apply_async(huggin_face_api, (prompt,))
+   
+    #async_result5 = pool.apply_async(yandex_cloud, (prompt,))
+
+    # result = (async_result1.get() or []) + (async_result3.get() or []) + (async_result4.get() or []) + (async_result2.get() or [])
+    # result = (async_result1.get() or []) + (async_result3.get() or []) + (async_result2.get() or [])
+    result = (async_result1.get() or []) + (async_result2.get() or []) + (async_result3.get() or []) + (async_result4.get() or [])
 
     return result[:10]
 
