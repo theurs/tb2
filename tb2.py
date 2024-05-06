@@ -944,7 +944,7 @@ def export_data_thread(message: telebot.types.Message):
                                 _bot_response += l + '\n'
                         _user_request = _user_request.strip()
                         _bot_response = _bot_response.strip()
-                        _record = (_chat_id_full, _user, _date_and_time, _user_request, _bot_response, _date_in_seconds, _chat_id, _thread_id)
+                        _record = (_chat_id_full, _user, _date_and_time, _user_request[:20], _bot_response[:20], _date_in_seconds, _chat_id, _thread_id)
                         data.append(_record)
                     except Exception as error:
                         # error_traceback = traceback.format_exc()

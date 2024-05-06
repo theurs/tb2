@@ -133,10 +133,10 @@ def rewrite_prompt_for_open_dalle(prompt: str) -> str:
 def huggin_face_api(prompt: str) -> bytes:
     """
     Calls the Hugging Face API to generate text based on a given prompt.
-    
+
     Args:
         prompt (str): The prompt to generate text from.
-    
+
     Returns:
         bytes: The generated text as bytes.
     """
