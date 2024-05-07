@@ -19,6 +19,7 @@ openpyxl
 pandas
 Pillow
 prettytable
+Proxy_List_Scrapper
 pyenchant
 pylatexenc
 PyPDF2

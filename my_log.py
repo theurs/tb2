@@ -10,12 +10,12 @@ import time
 import telebot
 
 import cfg
-import my_dic
+from my_dic2 import PersistentDict
 
 
 # хранилище данных о логах юзеров, какой юзер в каком месте должен быть залогирован
 # {user_id: (thread_id)} тут предполагается что все в одной группе разделенные по темам
-USERS_LOGS = my_dic.PersistentDict('db/users_logs.pkl')
+USERS_LOGS = PersistentDict('db/users_logs.pkl')
 
 
 lock = threading.Lock()
@@ -76,6 +76,15 @@ def log_translate(text: str) -> None:
     with lock:
         time_now = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
         log_file_path = 'logs/debug_translate.log'
+        open(log_file_path, 'a', encoding="utf-8").write(f'{time_now}\n\n{text}\n{"=" * 80}\n')
+
+
+def log_gemini(text: str) -> None:
+    """для дебага ошибок gemini"""
+    global lock
+    with lock:
+        time_now = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
+        log_file_path = 'logs/debug_gemini.log'
         open(log_file_path, 'a', encoding="utf-8").write(f'{time_now}\n\n{text}\n{"=" * 80}\n')
 
 

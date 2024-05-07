@@ -25,7 +25,6 @@ import my_genimg
 import my_dic
 import my_google
 import my_log
-import my_perplexity
 import my_sum
 import my_stt
 import my_trans
@@ -2036,7 +2035,7 @@ def main():
     Runs the main function, which sets default commands and starts polling the bot.
     """
     #set_default_commands()
-    my_gemini.load_memory_from_file()
+    my_gemini.run_proxy_pool_daemon()
     bot.polling(timeout=90, long_polling_timeout = 90)
 
 

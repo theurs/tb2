@@ -3,7 +3,6 @@
 
 import pickle
 import threading
-import traceback
 from pprint import pprint
 
 import my_log
