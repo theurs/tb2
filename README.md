@@ -141,6 +141,14 @@ gemini_keys = ['xxx',
 # прокси для рисования бингом
 # bing_proxy = ['socks5://172.28.1.4:1080', 'socks5://172.28.1.7:1080', 'socks5://172.28.1.5:1080',]
 bing_proxy = []
+
+# https://console.groq.com/keys
+GROQ_API_KEY = [
+    'gsk_xxx',
+    'gsk_yyy',
+    ]
+# GROQ_PROXIES = ['socks5://172.28.1.8:1080',]
+
 ```
 
 7. Запустить ./tb.py

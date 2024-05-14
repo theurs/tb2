@@ -9,6 +9,7 @@ duckduckgo_search
 edge_tts
 fake_useragent
 fuzzywuzzy
+httpx[socks]
 google
 gradio_client
 groq

@@ -5,6 +5,7 @@ import os
 import random
 import re
 import string
+import traceback
 import urllib.parse
 import sys
 import concurrent.futures
@@ -14,6 +15,7 @@ import googlesearch
 import trafilatura
 
 import gpt_basic
+import my_groq
 import cfg
 import my_log
 
@@ -380,5 +382,49 @@ def restore_links(text: str, replace_links: dict) -> str:
     return text
 
 
+
+def search_v4(query: str, lang: str = 'ru', max_search: int = 10) -> str:
+    # добавляем в список выдачу самого гугла, и она же первая и главная
+    urls = [f'https://www.google.com/search?q={urllib.parse.quote(query)}',]
+    # добавляем еще несколько ссылок, возможно что внутри будут пустышки, джаваскрипт заглушки итп
+    try:
+        r = googlesearch.search(query, stop = max_search, lang=lang)
+    except Exception as error:
+        my_log.log2(f'my_google:search_google_v2: {error}')
+        try:
+            r = [x for x in ddg_text(query)]
+        except Exception as error:
+            my_log.log2(f'my_google:search_google_v2: {error}')
+            return ''
+
+    bad_results = ('https://g.co/','.pdf','.docx','.xlsx', '.doc', '.xls')
+
+    try:
+        for url in r:
+            if any(s.lower() in url.lower() for s in bad_results):
+                continue
+            urls.append(url)
+    except Exception as error:
+        error_traceback = traceback.format_exc()
+        my_log.log2(f'my_google:search_v3: {error}\n\n{error_traceback}')
+
+    text = ''
+    for url in urls:
+        # print(url)
+        text += download_text([url,], 5000)
+        if len(text) > 12000:
+            break
+
+    q = f'''Answer in "{lang}" language to users search query using search results and your own knowledge.
+User query: "{query}"
+
+Search results:
+
+{text[:12000]}
+'''
+    return my_groq.ai(q, max_tokens_ = 4000)
+
+
 if __name__ == "__main__":
-    print(search('3 закона робототехники'))
+    print(search_v4('курс доллара'))
+    print(search_v4('3 закона робототехники'))

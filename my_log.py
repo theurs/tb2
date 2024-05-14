@@ -34,6 +34,15 @@ def log2(text: str) -> None:
         open(log_file_path, 'a', encoding="utf-8").write(f'{time_now}\n\n{text}\n{"="*89}\n')
 
 
+def log_groq(text: str) -> None:
+    """для дебага groq"""
+    global lock
+    with lock:
+        time_now = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
+        log_file_path = 'logs/debug_groq.log'
+        open(log_file_path, 'a', encoding="utf-8").write(f'{time_now}\n\n{text}\n{"="*89}\n')
+
+
 def log_huggin_face_api(text: str) -> None:
     """для логов от hugging_face_api"""
     global lock
