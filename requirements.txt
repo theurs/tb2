@@ -11,6 +11,7 @@ fake_useragent
 fuzzywuzzy
 google
 gradio_client
+groq
 langcodes[data]
 langdetect
 opencv-python
