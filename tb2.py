@@ -1174,9 +1174,9 @@ def google_thread(message: telebot.types.Message):
                     my_log.log2(f'tb:google: {perror}')
                     r = ''
                 if not r:
-                    r = my_google.search(q)
+                    r = my_google.search_v4(q)
                     r = utils.bot_markdown_to_html(r)
-                    r += '\n\n[google + chatGPT]'
+                    r += '\n\n[google + llama3-70b]'
             try:
                 reply_to_long_message(message, r, parse_mode = 'HTML',
                                       disable_web_page_preview = True,
