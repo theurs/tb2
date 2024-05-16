@@ -61,7 +61,7 @@ if hasattr(cfg, 'GEMINI_MAX_CHAT_LINES'):
 
 # можно сделать 2 запроса по 15000 в сумме получится запрос размером 30000
 # может быть полезно для сумморизации текстов
-MAX_SUM_REQUEST = 25000
+MAX_SUM_REQUEST = 150000
 
 # хранилище диалогов {id:list(mem)}
 CHATS = SqliteDict('db/gemini_dialogs.db', autocommit=True)
@@ -825,18 +825,21 @@ def sum_big_text(text:str, query: str, temperature: float = 0.1) -> str:
     Returns:
         str: The generated response from the AI model.
     """
-    t1 = text[:int(MAX_SUM_REQUEST/2)]
-    t2 = text[int(MAX_SUM_REQUEST/2):MAX_SUM_REQUEST] if len(text) > int(MAX_SUM_REQUEST/2) else ''
-    mem = []
-    if t2:
-        mem.append({"role": "user", "parts": [{"text": f'Dont answer before get part 2 and question.\n\nPart 1:\n\n{t1}'}]})
-        mem.append({"role": "model", "parts": [{"text": 'Ok.'}]})
-        mem.append({"role": "user", "parts": [{"text": f'Part 2:\n\n{t2}'}]})
-        mem.append({"role": "model", "parts": [{"text": 'Ok.'}]})
-    else:
-        mem.append({"role": "user", "parts": [{"text": f'Dont answer before get part 1 and question.\n\nPart 1:\n\n{t1}'}]})
-        mem.append({"role": "model", "parts": [{"text": 'Ok.'}]})
-    return ai(query, mem=mem, temperature=temperature)
+    query = f'''{query}\n\n{text[:MAX_SUM_REQUEST]}'''
+    # t1 = text[:int(MAX_SUM_REQUEST/2)]
+    # t2 = text[int(MAX_SUM_REQUEST/2):MAX_SUM_REQUEST] if len(text) > int(MAX_SUM_REQUEST/2) else ''
+    # mem = []
+    # if t2:
+    #     mem.append({"role": "user", "parts": [{"text": f'Dont answer before get part 2 and question.\n\nPart 1:\n\n{t1}'}]})
+    #     mem.append({"role": "model", "parts": [{"text": 'Ok.'}]})
+    #     mem.append({"role": "user", "parts": [{"text": f'Part 2:\n\n{t2}'}]})
+    #     mem.append({"role": "model", "parts": [{"text": 'Ok.'}]})
+    # else:
+    #     mem.append({"role": "user", "parts": [{"text": f'Dont answer before get part 1 and question.\n\nPart 1:\n\n{t1}'}]})
+    #     mem.append({"role": "model", "parts": [{"text": 'Ok.'}]})
+
+    # return ai(query, mem=mem, temperature=temperature)
+    return ai(query, temperature=temperature, model='gemini-1.5-flash-latest')
 
 
 def repair_text_after_speech_to_text(text: str) -> str:

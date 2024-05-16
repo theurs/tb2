@@ -81,9 +81,9 @@ BEGIN:
         try:
             # r = my_gemini.ai(prompt_gemini[:cfg.max_request]).strip()
             if subj == 'youtube_video':
-                qq = f'Summarize the content of this YouTube video using only the subtitles, what this video about, in no more than 1000 words, answer in [{lang}] language.'
+                qq = f'Summarize the content of this YouTube video using only the subtitles, what this video about, in 500-4000 words, answer in [{lang}] language.'
             else:
-                qq = f'Summarize the content of this article using only provided text, what this text about, in no more than 1000 words, answer in [{lang}] language.'
+                qq = f'Summarize the content of this article using only provided text, what this text about, in 500-4000 words, answer in [{lang}] language.'
             r = my_gemini.sum_big_text(text[:my_gemini.MAX_SUM_REQUEST], qq).strip()
             if r != '':
                 result = f'{r}\n\n--\nGemini Pro [{len(prompt[:my_gemini.MAX_SUM_REQUEST])} символов]'
