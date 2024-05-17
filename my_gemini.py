@@ -125,6 +125,7 @@ def img2txt(data_: bytes, prompt: str = "Что на картинке, подр�
         result = ''
         keys = cfg.gemini_keys[:]  + ALL_KEYS
         random.shuffle(keys)
+        keys = keys[:4]
 
         proxies = PROXY_POOL[:]
         random.shuffle(proxies)
@@ -308,6 +309,7 @@ def ai(q: str, mem = [], temperature: float = 0.1, proxy_str: str = '', model: s
 
     keys = cfg.gemini_keys[:] + ALL_KEYS
     random.shuffle(keys)
+    keys = keys[:4]
     result = ''
 
     if proxy_str == 'probe':
