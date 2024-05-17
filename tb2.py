@@ -985,7 +985,7 @@ def export_data_thread(message: telebot.types.Message):
                 my_log.log2(f'tb:export_data_thread: {error}')
 
 
-@bot.message_handler(commands=['clear']) 
+@bot.message_handler(commands=['clear', 'reset']) 
 def clear(message: telebot.types.Message):
     thread = threading.Thread(target=clear_thread, args=(message,))
     thread.start()
