@@ -262,10 +262,16 @@ def ai(q: str, mem = [], temperature: float = 0.1, proxy_str: str = '', model: s
     - str: The generated content based on the input question.
     """
     if model == '':
-        # model = 'gemini-1.5-pro-latest'
-        model = 'gemini-1.0-pro-latest'
-        # model = 'gemini-1.0-pro'
-        # model = 'gemini-pro'
+        model = 'gemini-1.5-flash-latest'
+        # model = 'gemini-1.0-pro-latest'
+        # models/gemini-1.0-pro
+        # models/gemini-1.0-pro-001
+        # models/gemini-1.0-pro-latest
+        # models/gemini-1.0-pro-vision-latest
+        # models/gemini-1.5-flash-latest
+        # models/gemini-1.5-pro-latest
+        # models/gemini-pro
+        # models/gemini-pro-vision
     global PROXY_POOL, PROXY_POLL_SPEED
     # bugfix температура на самом деле от 0 до 1 а не от 0 до 2
     temperature = round(temperature / 2, 2)
