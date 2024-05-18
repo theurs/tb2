@@ -1929,7 +1929,7 @@ def do_task(message, custom_prompt: str = ''):
 
             with ShowAction(message, 'typing'):
                 try:
-                    answer = my_groq.chat(message.text, chat_id_full, style = 'Всегда отвечаешь только на русском языке.')
+                    answer = my_groq.chat('(отвечай на русском языке) ' + message.text, chat_id_full)
                     my_log.log_echo(message, answer)
                     if answer:
                         answer = utils.bot_markdown_to_html(answer)
