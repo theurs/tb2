@@ -698,6 +698,7 @@ def send_debug_history(message: telebot.types.Message):
         my_log.log_echo(message, prompt)
         reply_to_long_message(message, prompt, parse_mode = '', disable_web_page_preview = True)
 
+
 @bot.message_handler(commands=['bard'])
 def bard(message: telebot.types.Message):
     thread = threading.Thread(target=bard_thread, args=(message,))

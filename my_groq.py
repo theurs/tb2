@@ -127,10 +127,23 @@ def update_mem(query: str, resp: str, mem):
     while token_count(mem) > MAX_QUERY_LENGTH:
         mem = mem[2:]
     mem = mem[:MAX_LINES*2]
+
+    # непонятный глюк с задвоением памяти, убираем дубли
+    mem__ = []
+    try:
+        i = 0
+        while i < len(mem):
+            if i == 0 or mem[i] != mem[i-1]:
+                mem__.append(mem[i])
+            i += 1
+    except Exception as error:
+        error_traceback = traceback.format_exc()
+        my_log.log_groq(f'my_groq:update_mem: {error}\n\n{error_traceback}\n\n{query}\n\n{resp}\n\n{mem}')
+    
     if chat_id:
-        CHATS[chat_id] = mem
+        CHATS[chat_id] = mem__
     else:
-        return mem
+        return mem__
 
 
 def chat(query: str, chat_id: str,
