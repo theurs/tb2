@@ -191,7 +191,8 @@ def bot_markdown_to_html(text: str) -> str:
         text = text.replace(f'${match}$', new_match)
 
     # меняем маркдаун ссылки на хтмл
-    text = re.sub(r'\[([^\]]*)\]\(([^\)]*)\)', r'<a href="\2">\1</a>', text)
+    # text = re.sub(r'\[([^\]]*)\]\(([^\)]*)\)', r'<a href="\2">\1</a>', text)
+    text = re.sub('''\[(.*?)\]\((https?://\S+)\)''', r'<a href="\2">\1</a>', text)
     # меняем все ссылки на ссылки в хтмл теге кроме тех кто уже так оформлен
     # а зачем собственно? text = re.sub(r'(?<!<a href=")(https?://\S+)(?!">[^<]*</a>)', r'<a href="\1">\1</a>', text)
 

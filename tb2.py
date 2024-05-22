@@ -18,6 +18,7 @@ import pandas as pd
 import bing_img
 import cfg
 import gpt_basic
+import gpt_basic_2
 import my_bard
 import my_claude
 import my_gemini
@@ -697,6 +698,12 @@ def send_debug_history(message: telebot.types.Message):
             prompt = 'Пусто'
         my_log.log_echo(message, prompt)
         reply_to_long_message(message, prompt, parse_mode = '', disable_web_page_preview = True)
+    elif CHAT_MODE[chat_id_full] == 'haiku':
+        prompt = gpt_basic_2.get_mem_as_string(chat_id_full)
+        if not prompt:
+            prompt = 'Пусто'
+        my_log.log_echo(message, prompt)
+        reply_to_long_message(message, prompt, parse_mode = '', disable_web_page_preview = True)
 
 
 @bot.message_handler(commands=['bard'])
@@ -745,6 +752,17 @@ def bard_thread(message: telebot.types.Message):
         except Exception as error3:
             print(f'tb:do_task: {error3}')
             my_log.log2(f'tb:do_task: {error3}')
+
+
+@bot.message_handler(commands=['haiku'])
+def haiku(message: telebot.types.Message):
+    """включить работу haiku в этой теме/чате"""
+    if is_admin_member(message):
+        chat_id_full = get_topic_id(message)
+        CHAT_MODE[chat_id_full] = 'haiku'
+        bot.reply_to(message, 'Теперь бот отвечает как Claude 3 haiku в этой теме/чате')
+    else:
+        bot.reply_to(message, 'Эта команда только для администраторов')
 
 
 @bot.message_handler(commands=['llamamode'])
@@ -1019,6 +1037,10 @@ def clear_thread(message: telebot.types.Message):
         my_groq.reset(chat_id_full)
         my_log.log_echo(message, 'История ламы принудительно очищена')
         my_log.log_report(bot, message, chat_id_full, user_id, 'забудь', 'История ламы принудительно очищена')
+    elif chat_id_full in CHAT_MODE and CHAT_MODE[chat_id_full] == 'haiku':
+        gpt_basic_2.reset(chat_id_full)
+        my_log.log_echo(message, 'История haiku принудительно очищена')
+        my_log.log_report(bot, message, chat_id_full, user_id, 'забудь', 'История haiku принудительно очищена')
     bot.reply_to(message, 'Ок', parse_mode='Markdown')
 
 
@@ -1554,6 +1576,7 @@ def send_welcome_help(message: telebot.types.Message):
         help += '\n\n***Дополнение отображается только для администраторов:***\n\n' + """/activate - команда для активации работы бота в этой теме
 /deactivate - для деактивации работы бота в этой теме
 
+/haiku - в этом чате будет отвечать claude 3 haiku
 /llamamode - в этом чате будет отвечать llama 3 70b
 /chatgptmode - в этом чате будет отвечать ChatGPT
 /bardmode - в этом чате будет отвечать Google Bard
@@ -1951,6 +1974,43 @@ def do_task(message, custom_prompt: str = ''):
                 except Exception as error3:
                     print(f'tb:do_task: {error3}')
                     my_log.log2(f'tb:do_task: {error3}')
+
+
+
+
+        # если активирован haiku
+        elif CHAT_MODE[chat_id_full] == 'haiku':
+            if len(msg) > gpt_basic_2.MAX_REQUEST:
+                bot.reply_to(message, f'Слишком длинное сообщение для haiku: {len(msg)} из {gpt_basic_2.MAX_REQUEST}')
+                my_log.log_echo(message, f'Слишком длинное сообщение для haiku: {len(msg)} из {gpt_basic_2.MAX_REQUEST}')
+                return
+
+            with ShowAction(message, 'typing'):
+                try:
+                    answer = gpt_basic_2.chat(message.text, chat_id_full)
+                    my_log.log_echo(message, answer)
+                    if answer:
+                        answer = utils.bot_markdown_to_html(answer)
+                        answer = answer.strip()
+                        answer += '\n\n[claude 3 haiku]'
+                        try:
+                            reply_to_long_message(message, answer, parse_mode='HTML', disable_web_page_preview = True, 
+                                                    reply_markup=get_keyboard('chat', message))
+                        except Exception as error:
+                            print(f'tb:do_task: {error}')
+                            my_log.log2(f'tb:do_task: {error}')
+                            reply_to_long_message(message, answer, parse_mode='', disable_web_page_preview = True, 
+                                                    reply_markup=get_keyboard('chat', message))
+                        my_log.log_report(bot, message, chat_id_full, user_id, user_text, answer, parse_mode='HTML')
+                    else:
+                        my_log.log_report(bot, message, chat_id_full, user_id, user_text, 'Claude 3 haiku не ответил', parse_mode='HTML')
+                        bot.reply_to(message, 'haiku не ответила')
+                except Exception as error3:
+                    print(f'tb:do_task: {error3}')
+                    my_log.log2(f'tb:do_task: {error3}')
+
+
+
 
         # если активирован gemini
         elif CHAT_MODE[chat_id_full] == 'gemini':
