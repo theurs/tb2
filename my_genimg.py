@@ -10,6 +10,7 @@ import sys
 import time
 import traceback
 from multiprocessing.pool import ThreadPool
+from io import BytesIO
 
 import cv2
 import gradio_client
@@ -19,6 +20,7 @@ import PIL
 import requests
 from duckduckgo_search import DDGS
 from sqlitedict import SqliteDict
+from PIL import Image
 
 import bing_img
 import cfg
@@ -41,6 +43,45 @@ WHO_AUTOR = {}
 # запоминаем промпты для хаггинг фейса, они не должны повторятся
 # {prompt:True/False, ...}
 huggingface_prompts = SqliteDict('db/kandinski_prompts.db', autocommit=True)
+
+
+
+def upscale(image_bytes: bytes) -> bytes:
+    """
+    Увеличивает размер изображения, если его ширина или высота меньше 1024 пикселей,
+    с сохранением хорошего качества.
+
+    Args:
+        image_bytes: Байты изображения.
+
+    Returns:
+        Байты увеличенного изображения или исходные байты, если увеличение не требуется.
+    """
+    try:
+        image = Image.open(BytesIO(image_bytes))
+        width, height = image.size
+
+        if width < 1024 or height < 1024:
+            if width > height:
+                new_width = 1024
+                new_height = int(height * (1024 / width))
+            else:
+                new_height = 1024
+                new_width = int(width * (1024 / height))
+
+            # Используем качественный алгоритм ресайза (Lanczos)
+            resized_image = image.resize((new_width, new_height), Image.LANCZOS)
+
+            # Сохраняем изображение в байты
+            output_buffer = BytesIO()
+            resized_image.save(output_buffer, format=image.format)
+            return output_buffer.getvalue()
+        else:
+            return image_bytes
+    except Exception as error:
+        error_traceback = traceback.format_exc()
+        my_log.log_huggin_face_api(f'my_genimg:upscale: {error}\n\n{error_traceback}')
+        return image_bytes
 
 
 def bing(prompt: str, moderation_flag: bool = False, user_id: str = ''):
@@ -206,8 +247,10 @@ def huggin_face_api(prompt: str) -> bytes:
             if 'read timeout=' in resp_text or "SOCKSHTTPSConnectionPool(host='api-inference.huggingface.co', port=443): Max retries exceeded with url" in resp_text: # и так долго ждали
                 return []
             if response.content and '{"error"' not in resp_text:
-                result.append(response.content)
-                WHO_AUTOR[hash(response.content)] = url.split('/')[-1]
+                # resize small images, upscale
+                upscaled = upscale(response.content)
+                result.append(upscaled)
+                WHO_AUTOR[hash(upscaled)] = url.split('/')[-1]
                 return result
 
             if 'is currently loading","estimated_time":' in str(resp_text) or \
