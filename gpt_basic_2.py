@@ -16,14 +16,14 @@ MODEL = 'anthropic/claude-3-haiku'
 
 # сколько запросов хранить
 MAX_MEM_LINES = 10
-MAX_CHARS = 20000
+MAX_CHARS = 10000
 
 # блокировка чатов что бы не испортить историю 
 # {id:lock}
 LOCKS = {}
 
 # не принимать запросы больше чем, это ограничение для телеграм бота, в этом модуле оно не используется
-MAX_REQUEST = 10000
+MAX_REQUEST = 8000
 
 # хранилище диалогов {id:list(mem)}
 CHATS = SqliteDict('db/haiku_dialogs.db', autocommit=True)
