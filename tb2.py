@@ -1975,9 +1975,6 @@ def do_task(message, custom_prompt: str = ''):
                     print(f'tb:do_task: {error3}')
                     my_log.log2(f'tb:do_task: {error3}')
 
-
-
-
         # если активирован haiku
         elif CHAT_MODE[chat_id_full] == 'haiku':
             if len(msg) > gpt_basic_2.MAX_REQUEST:
@@ -2008,9 +2005,6 @@ def do_task(message, custom_prompt: str = ''):
                 except Exception as error3:
                     print(f'tb:do_task: {error3}')
                     my_log.log2(f'tb:do_task: {error3}')
-
-
-
 
         # если активирован gemini
         elif CHAT_MODE[chat_id_full] == 'gemini':
