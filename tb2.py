@@ -1256,7 +1256,8 @@ def image_thread(message: telebot.types.Message):
                     bot_reply(message, 'Слишком много сообщений, попробуйте позже')
                     return
                 with ShowAction(message, 'upload_photo'):
-                    moderation_flag = gpt_basic.moderation(prompt)
+                    # moderation_flag = gpt_basic.moderation(prompt)
+                    moderation_flag = ''
                     if moderation_flag:
                         msg = 'Что то подозрительное есть в вашем запросе, попробуйте написать иначе.'
                         bot_reply(message, msg)
