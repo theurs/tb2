@@ -615,7 +615,6 @@ def handle_photo_thread(message: telebot.types.Message):
                                 parse_mode='HTML')
 
 
-
 @bot.message_handler(content_types = ['document'])
 def handle_document(message: telebot.types.Message):
     """Обработчик документов"""
