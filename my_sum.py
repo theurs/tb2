@@ -1,23 +1,22 @@
 #!/usr/bin/env python3
-
+#pip install lxml[html_clean]
 
 import io
 import os
 import re
 import sys
 from urllib.parse import urlparse
+from youtube_transcript_api import YouTubeTranscriptApi
 
 import chardet
+# import magic
 import PyPDF2
 import requests
 import trafilatura
-from youtube_transcript_api import YouTubeTranscriptApi
 
-import cfg
-import gpt_basic
 import my_log
-import my_claude
 import my_gemini
+import my_groq
 import utils
 
 
@@ -31,13 +30,25 @@ def get_text_from_youtube(url: str) -> str:
         str: первые субтитры из списка какие есть в видео
     """
     top_langs = ('ru', 'en', 'uk', 'es', 'pt', 'fr', 'ar', 'id', 'it', 'de', 'ja', 'ko', 'pl', 'th', 'tr', 'nl', 'hi', 'vi', 'sv', 'ro')
-    video_id = re.search(r"(?:v=|\/)([a-zA-Z0-9_-]{11})(?:\?|&|\/|$)", url).group(1)
-    t = YouTubeTranscriptApi.get_transcript(video_id, languages=top_langs)
+
+    try:
+        video_id = re.search(r"(?:v=|\/)([a-zA-Z0-9_-]{11})(?:\?|&|\/|$)", url).group(1)
+    except:
+        return ''
+
+    try:
+        t = YouTubeTranscriptApi.get_transcript(video_id, languages=top_langs)
+    except Exception as error:
+        if 'If you are sure that the described cause is not responsible for this error and that a transcript should be retrievable, please create an issue at' not in str(error):
+            my_log.log2(f'get_text_from_youtube: {error}')
+        t = ''
+
     text = '\n'.join([x['text'] for x in t])
-    return text or ''
+    
+    return text.strip() or ''
 
 
-def summ_text_worker(text: str, subj: str = 'text') -> str:
+def summ_text_worker(text: str, subj: str = 'text', lang: str = 'ru', query: str = '') -> str:
     """параллельный воркер для summ_text
        subj == 'text' or 'pdf'  - обычный текст о котором ничего не известно
        subj == 'chat_log'       - журнал чата
@@ -48,45 +59,39 @@ def summ_text_worker(text: str, subj: str = 'text') -> str:
     if isinstance(text, tuple):
         text, subj, _ = text[0], text[1], text[2]
 
-    lang = 'ru'
-
-    if subj == 'text' or subj == 'pdf':
-        prompt = f"""Summarize the following, briefly answer in [{lang}] language with easy-to-read formatting:
--------------
-{text}
--------------
-BEGIN:
-"""
-    elif subj == 'youtube_video':
-        prompt = f"""Summarize the following video subtitles extracted from youtube, briefly answer in [{lang}] language with easy-to-read formatting:
--------------
-{text}
--------------
-"""
-
     if type(text) != str or len(text) < 1: return ''
 
     result = ''
 
-    # if len(prompt) > cfg.max_request:
-    #     try:
-    #         r = my_claude.chat(prompt[:my_claude.MAX_QUERY], 'my_summ')
-    #         if r.strip():
-    #             result = f'{r}\n\n--\nClaude - Anthropic [{len(prompt[:my_claude.MAX_QUERY])} символов]'
-    #     except Exception as error:
-    #         print(f'my_sum:summ_text_worker:claude: {error}')
-    #         my_log.log2(f'my_sum:summ_text_worker:claude: {error}')
+    if subj == 'youtube_video':
+        qq = f'''Summarize the content of this YouTube video.
+
+Answer in [{lang}] language.
+
+The structure of the answer should be similar to the following:
+Show a block with the brief summary of the video in 2 sentences, which satisfies most people.
+Show a block with a detail summary of the content of the video in your own words, 300-2000 words.
+
+Extracted subtitles:
+'''
+    else:
+        qq = f'''Summarize the content of this text.
+
+Answer in [{lang}] language.
+
+The structure of the answer should be similar to the following:
+Show a block with the brief summary of the text in 2 sentences, which satisfies most people.
+Show a block with a detail summary of the content of the text in your own words, 300-2000 words.
+
+Text:'''
 
     if not result:
         try:
-            # r = my_gemini.ai(prompt_gemini[:cfg.max_request]).strip()
-            if subj == 'youtube_video':
-                qq = f'Summarize the content of this YouTube video using only the subtitles, what this video about, in 500-4000 words, answer in [{lang}] language.'
-            else:
-                qq = f'Summarize the content of this article using only provided text, what this text about, in 500-4000 words, answer in [{lang}] language.'
+            if query:
+                qq = query
             r = my_gemini.sum_big_text(text[:my_gemini.MAX_SUM_REQUEST], qq).strip()
             if r != '':
-                result = f'{r}\n\n--\nGemini Pro [{len(prompt[:my_gemini.MAX_SUM_REQUEST])} символов]'
+                result = f'{r}\n\n--\nGemini Pro [{len(text[:my_gemini.MAX_SUM_REQUEST])}]'
         except Exception as error:
             print(f'my_sum:summ_text_worker:gpt: {error}')
             my_log.log2(f'my_sum:summ_text_worker:gpt: {error}')
@@ -94,9 +99,22 @@ BEGIN:
 
     if not result:
         try:
-            r = gpt_basic.ai(prompt[:cfg.max_request]).strip()
-            if r:
-                result = f'{r}\n\n--\nchatGPT-3.5-turbo-16k [{len(prompt[:cfg.max_request])} символов]'
+            if query:
+                qq = query
+            r = my_groq.sum_big_text(text[:32000], qq, model = 'mixtral-8x7b-32768').strip()
+            if r != '':
+                result = f'{r}\n\n--\nMixtral-8x7b-32768 [Groq] [{len(text[:32000])}]'
+        except Exception as error:
+            print(f'my_sum:summ_text_worker:gpt: {error}')
+            my_log.log2(f'my_sum:summ_text_worker:gpt: {error}')
+
+    if not result:
+        try:
+            if query:
+                qq = query
+            r = my_groq.sum_big_text(text[:my_groq.MAX_QUERY_LENGTH], qq).strip()
+            if r != '':
+                result = f'{r}\n\n--\nLlama3 70b [Groq] [{len(text[:my_groq.MAX_QUERY_LENGTH])}]'
         except Exception as error:
             print(f'my_sum:summ_text_worker:gpt: {error}')
             my_log.log2(f'my_sum:summ_text_worker:gpt: {error}')
@@ -104,16 +122,17 @@ BEGIN:
     return result
 
 
-def summ_text(text: str, subj: str = 'text') -> str:
+def summ_text(text: str, subj: str = 'text', lang: str = 'ru', query: str = '') -> str:
     """сумморизирует текст с помощью бинга или гптчата или клод-100к, возвращает краткое содержание, только первые 30(60)(99)т символов
     subj - смотрите summ_text_worker()
     """
-    return summ_text_worker(text, subj)
+    return summ_text_worker(text, subj, lang, query)
 
 
-def summ_url(url:str) -> str:
+def summ_url(url:str, download_only: bool = False, lang: str = 'ru'):
     """скачивает веб страницу, просит гптчат или бинг сделать краткое изложение текста, возвращает текст
-    если в ссылке ютуб то скачивает субтитры к видео вместо текста"""
+    если в ссылке ютуб то скачивает субтитры к видео вместо текста
+    может просто скачать текст без саммаризации, для другой обработки"""
     youtube = False
     pdf = False
     if '/youtu.be/' in url or 'youtube.com/' in url:
@@ -124,13 +143,19 @@ def summ_url(url:str) -> str:
                 
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
 
-        response = requests.get(url, stream=True, headers=headers, timeout=10)
-        content = b''
-        # Ограничиваем размер
-        for chunk in response.iter_content(chunk_size=1024):
-            content += chunk
-            if len(content) > 1 * 1024 * 1024: # 1 MB
-                break
+        try:
+            response = requests.get(url, stream=True, headers=headers, timeout=20)
+            content = b''
+            # Ограничиваем размер
+            for chunk in response.iter_content(chunk_size=1024):
+                content += chunk
+                if len(content) > 1 * 1024 * 1024: # 1 MB
+                    break
+        except:
+            if download_only:
+                return ''
+            else:
+                return '', ''
 
         if utils.mime_from_buffer(content) == 'application/pdf':
             pdf = True
@@ -141,26 +166,35 @@ def summ_url(url:str) -> str:
                 text += page.extract_text()
         else:
             # Определяем кодировку текста
-            encoding = chardet.detect(content)['encoding']
+            encoding = chardet.detect(content[:2000])['encoding']
             # Декодируем содержимое страницы
             try:
                 content = content.decode(encoding)
-            except UnicodeDecodeError as error:
-                print(error)
-                content = response.content.decode('utf-8')
+            except:
+                try:
+                    content = content.decode('utf-8')
+                except:
+                    if download_only:
+                        return ''
+                    else:
+                        return '', ''
 
-            newconfig = trafilatura.settings.use_config()
-            newconfig.set("DEFAULT", "EXTRACTION_TIMEOUT", "0")
-            text = trafilatura.extract(content, config=newconfig)
+            text = trafilatura.extract(content)
    
-    #return text
-    if youtube:
-        result = summ_text(text, 'youtube_video')
-    elif pdf:
-        result = summ_text(text, 'pdf')
+    if download_only:
+        if youtube:
+            r = f'URL: {url}\nСубтитры из видео на ютубе (полное содержание, отметки времени были удалены):\n\n{text}'
+        else:
+            r = f'URL: {url}\nРаспознанное содержание веб страницы:\n\n{text}'
+        return r
     else:
-        result = summ_text(text, 'text')
-    return result
+        if youtube:
+            r = summ_text(text, 'youtube_video', lang)
+        elif pdf:
+            r = summ_text(text, 'pdf', lang)
+        else:
+            r = summ_text(text, 'text', lang)
+        return r, text
 
 
 def is_valid_url(url: str) -> bool:
@@ -174,19 +208,21 @@ def is_valid_url(url: str) -> bool:
 
 
 if __name__ == "__main__":
-    """Usage ./summarize.py '|URL|filename"""
-    
-   
-    r = summ_url('https://www.youtube.com/watch?v=LEk3Pp0o2hw')
-    print(r)
-    sys.exit(0)
-    
-    target = sys.argv[1]
 
-    if is_valid_url(target):
-        print(summ_url(target))
-    elif os.path.exists(target):
-        print(summ_text(open(target).read()))
-    else:
-        print("""Usage ./summarize.py '|URL|filename""")
+    # print(summ_url('https://telegra.ph/Tomm-05-19', download_only=True))
+
+    print(summ_url('https://www.youtube.com/watch?v=nrFjjsAc_E8')[0])
+    # print(summ_url('https://www.youtube.com/watch?v=0uOCF04QcHk')[0])
+    # print(summ_url('https://www.youtube.com/watch?v=IVTzUg50f_4')[0])
+    # print(summ_url('https://www.youtube.com/watch?v=0MehBAmxj-E')[0])
+    # print(summ_url('https://www.youtube.com/watch?v=-fbQK1to7-s')[0])
+    # print(summ_url('https://www.youtube.com/watch?v=5ijY7TjBwVk')[0])
+    # print(summ_url('https://www.youtube.com/watch?v=uNCsO0JytPA')[0])
+    # print(summ_url('https://www.youtube.com/watch?v=DZkEg82Nc_k')[0])
     
+    # print(summ_url('https://www.linux.org.ru/news/opensource/17620258')[0])
+    # print(summ_url('https://habr.com/ru/companies/productradar/articles/815709/')[0])
+    # print(summ_url('https://habr.com/ru/news/815789/')[0])
+    # print(summ_url('http://lib.ru/RUFANT/ABARINOWA/shwabra.txt')[0])
+    # print(summ_url('http://lib.ru/RUFANT/ABARINOWA/nederzhanie_istiny.txt')[0])
+

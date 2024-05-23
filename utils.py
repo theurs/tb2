@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-
+import datetime
 import hashlib
 import html
+import pytz
 import multiprocessing
 import os
 import random
@@ -478,6 +479,18 @@ def download_image_as_bytes(url: str) -> bytes:
         my_log.log2(f'download_image_as_bytes: {error}\n\n{error_traceback}')
         return None
     return response.content
+
+
+def get_full_time() -> str:
+    """
+    Get the current time with a GMT time offset.
+
+    Returns:
+        str: A string representing the current time in the format "YYYY-MM-DD HH:MM:SS TZ".
+    """
+    now = datetime.datetime.now(pytz.timezone('Europe/Moscow'))
+    time_string = now.strftime("%Y-%m-%d %H:%M:%S %Z")
+    return time_string
 
 
 if __name__ == '__main__':

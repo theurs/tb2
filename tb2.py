@@ -1187,19 +1187,11 @@ def google_thread(message: telebot.types.Message):
 
         with ShowAction(message, 'typing'):
             with semaphore_talks:
-                try:
-                    r = ''
-                    # r = my_perplexity.ask(q)
-                    if r:
-                        r += '\n\n[perplexity]'
-                except Exception as perror:
-                    print(f'tb:google: {perror}')
-                    my_log.log2(f'tb:google: {perror}')
-                    r = ''
-                if not r:
-                    r = my_google.search_v4(q)
+                r, _ = my_google.search_v3(q)
+                if r.strip():
                     r = utils.bot_markdown_to_html(r)
-                    r += '\n\n[google + llama3-70b]'
+                else:
+                    r = 'Ничего не нашлось'
             try:
                 reply_to_long_message(message, r, parse_mode = 'HTML',
                                       disable_web_page_preview = True,
@@ -1476,7 +1468,7 @@ def summ_text_thread(message: telebot.types.Message):
                     with ShowAction(message, 'typing'):
                         res = ''
                         try:
-                            res = my_sum.summ_url(url)
+                            res, _ = my_sum.summ_url(url)
                         except Exception as error2:
                             print(f'tb:sum: {error2}')
                             my_log.log2(f'tb:sum: {error2}')

@@ -5,7 +5,7 @@ bs4
 chardet
 # claude-api
 curl_cffi
-duckduckgo_search
+duckduckgo_search[lxml]
 edge_tts
 fake_useragent
 fuzzywuzzy
@@ -15,6 +15,7 @@ gradio_client
 groq
 langcodes[data]
 langdetect
+lxml_html_clean
 opencv-python
 openai==0.28.0
 openpyxl
