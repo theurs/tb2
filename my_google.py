@@ -96,7 +96,7 @@ The structure of the answer should be similar to the following:
 
 Show a block with the user`s intention briefly.
 Show a block with a short and clear answer that satisfies most users.
-Show a block with a full answer and links, links should be formatted for easy reading.
+Show a block with a full answer and links, links should be formatted for easy reading, markdown in links is mandatory.
 Answer in "{lang}" language.
 
 User`s query: "{query}"
