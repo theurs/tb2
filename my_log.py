@@ -41,7 +41,16 @@ def log_haiku(text: str) -> None:
         time_now = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
         log_file_path = 'logs/debug_haiku.log'
         open(log_file_path, 'a', encoding="utf-8").write(f'{time_now}\n\n{text}\n{"="*89}\n')
-        
+
+
+def log_shadowjourney(text: str) -> None:
+    """для дебага shadowjourney"""
+    global lock
+    with lock:
+        time_now = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
+        log_file_path = 'logs/debug_shadowjourney.log'
+        open(log_file_path, 'a', encoding="utf-8").write(f'{time_now}\n\n{text}\n{"="*89}\n')
+
 
 def log_groq(text: str) -> None:
     """для дебага groq"""

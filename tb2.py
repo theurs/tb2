@@ -27,6 +27,7 @@ import my_groq
 import my_dic
 import my_google
 import my_log
+import my_shadowjourney
 import my_sum
 import my_stt
 import my_trans
@@ -1727,6 +1728,7 @@ def do_task(message, custom_prompt: str = ''):
         return
 
     chat_id_full = get_topic_id(message)
+    lang = 'ru'
 
     # не обрабатывать неизвестные команды
     if message.text.startswith('/'): return
@@ -2063,10 +2065,15 @@ def do_task(message, custom_prompt: str = ''):
                     my_log.log2(f'tb:do_task: {error3}')
 
         elif CHAT_MODE[chat_id_full] == 'chatGPT':
-            if len(msg) > cfg.CHATGPT_MAX_REQUEST:
-                bot.reply_to(message, f'{tr("Слишком длинное сообщение для chatGPT:", lang)} {len(msg)} {tr("из", lang)} {cfg.CHATGPT_MAX_REQUEST}')
-                my_log.log_echo(message, f'Слишком длинное сообщение для chatGPT: {len(msg)} из {cfg.CHATGPT_MAX_REQUEST}')
+            # if len(msg) > cfg.CHATGPT_MAX_REQUEST:
+            #     bot.reply_to(message, f'Слишком длинное сообщение для chatGPT: {len(msg)} из {cfg.CHATGPT_MAX_REQUEST}')
+            #     my_log.log_echo(message, f'Слишком длинное сообщение для chatGPT: {len(msg)} из {cfg.CHATGPT_MAX_REQUEST}')
+            #     return
+            if len(msg) > my_shadowjourney.MAX_REQUEST:
+                bot.reply_to(message, f'Слишком длинное сообщение для chatGPT: {len(msg)} из {my_shadowjourney.MAX_REQUEST}')
+                my_log.log_echo(message, f'Слишком длинное сообщение для chatGPT: {len(msg)} из {my_shadowjourney.MAX_REQUEST}')
                 return
+
             # chatGPT, добавляем новый запрос пользователя в историю диалога пользователя
             with ShowAction(message, 'typing'):
 
@@ -2081,7 +2088,9 @@ def do_task(message, custom_prompt: str = ''):
                     lock = threading.Lock()
                     GPT_CHAT_LOCKS[chat_id_full] = lock
                 with lock:
-                    resp = dialog_add_user_request(chat_id_full, message.text, 'gpt')
+                    resp = my_shadowjourney.chat(message.text, chat_id_full)
+                    # if not resp:
+                    #     resp = dialog_add_user_request(chat_id_full, message.text, 'gpt')
                     if resp:
                         resp = resp.strip()
                         resp += '\n\n[chatGPT]'                      
