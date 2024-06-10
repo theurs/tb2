@@ -117,7 +117,32 @@ def ai(prompt: str = '',
                 content = data_dict['choices'][0]['message']['content']
                 return content
             except json.decoder.JSONDecodeError:
-                return resp if resp != 'An error occurred with your deployment\n\nFUNCTION_INVOCATION_TIMEOUT\n' else ''
+                if resp == 'An error occurred with your deployment\n\nFUNCTION_INVOCATION_TIMEOUT\n':
+                    data = {
+                        "model": 'gpt-3.5-turbo',
+                        "max_tokens": 2000,
+                        "messages": mem_[-2:],
+                        "temperature": temperature,
+                    }
+                    response = requests.post(url, headers=headers, json=data, timeout=timeout)
+
+                    status = response.status_code
+                    if status == 200:
+                        try:
+                            resp = response.content.decode('utf-8', errors='replace')
+                            data_dict = json.loads(resp)
+                            content = data_dict['choices'][0]['message']['content']
+                            return content
+                        except json.decoder.JSONDecodeError:
+                            if resp == 'An error occurred with your deployment\n\nFUNCTION_INVOCATION_TIMEOUT\n':
+                                return ''
+                            else:
+                                return resp
+                        except Exception as error:
+                            my_log.log_shadowjourney(f'Failed to parse response: {error}\n\n{str(response)}')
+                            return ''
+                else:
+                    return resp
             except Exception as error:
                 my_log.log_shadowjourney(f'Failed to parse response: {error}\n\n{str(response)}')
                 return ''
