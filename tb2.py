@@ -646,7 +646,8 @@ def handle_document_thread(message: telebot.types.Message):
                     file_id = message.document.file_id
                     file_info = bot.get_file(file_id)
                     image = bot.download_file(file_info.file_path)
-                    result = my_bard.chat_image('Опиши что нарисовано на картинке, дай краткое но ёмкое описание изображения, так что бы человек понял что здесь изображено.', chat_id_full, image)
+                    query = message.caption or 'Опиши максимально подробно что нарисовано на картинке, так что бы человек понял что здесь изображено.'
+                    result = my_gemini.img2txt(image, query)
                     result = utils.bot_markdown_to_html(result)
                     reply_to_long_message(message, result, parse_mode='HTML',
                                         reply_markup=get_keyboard('chat', message))
