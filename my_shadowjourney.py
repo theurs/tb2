@@ -112,9 +112,12 @@ def ai(prompt: str = '',
         status = response.status_code
         if status == 200:
             try:
-                data_dict = json.loads(response.content.decode('utf-8', errors='replace'))
+                resp = response.content.decode('utf-8', errors='replace')
+                data_dict = json.loads(resp)
                 content = data_dict['choices'][0]['message']['content']
                 return content
+            except json.decoder.JSONDecodeError:
+                return resp if resp != 'An error occurred with your deployment\n\nFUNCTION_INVOCATION_TIMEOUT\n' else ''
             except Exception as error:
                 my_log.log_shadowjourney(f'Failed to parse response: {error}\n\n{str(response)}')
                 return ''
