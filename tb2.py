@@ -2089,9 +2089,8 @@ def do_task(message, custom_prompt: str = ''):
                     lock = threading.Lock()
                     GPT_CHAT_LOCKS[chat_id_full] = lock
                 with lock:
-                    resp = my_shadowjourney.chat(message.text, chat_id_full)
-                    # if not resp:
-                    #     resp = dialog_add_user_request(chat_id_full, message.text, 'gpt')
+                    # resp = my_shadowjourney.chat(message.text, chat_id_full)
+                    resp = dialog_add_user_request(chat_id_full, message.text, 'gpt')
                     if resp:
                         resp = resp.strip()
                         resp += '\n\n[chatGPT]'                      
