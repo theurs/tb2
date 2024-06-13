@@ -131,7 +131,7 @@ def img2txt(data_: bytes, prompt: str = "Что на картинке, подр�
         random.shuffle(proxies)
 
         for api_key in keys:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key={api_key}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
 
             if proxies:
                 sort_proxies_by_speed(proxies)
