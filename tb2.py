@@ -590,7 +590,10 @@ def handle_photo_thread(message: telebot.types.Message):
             photo = message.photo[-1]
             file_info = bot.get_file(photo.file_id)
             image = bot.download_file(file_info.file_path)
-            query = message.caption or 'Опиши максимально подробно что нарисовано на картинке, так что бы человек понял что здесь изображено.'
+            if message.caption:
+                query = 'Отвечай по-русски если не просили другое. ' + message.caption
+            else:
+                query = 'Опиши максимально подробно что нарисовано на картинке, так что бы человек понял что здесь изображено. Отвечай по-русски если не просили другое.'
             result = my_gemini.img2txt(image, query)
             if not result:
                 result = my_bard.chat_image(query, chat_id_full, image)
