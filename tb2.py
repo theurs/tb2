@@ -1122,8 +1122,14 @@ def tts_thread(message: telebot.types.Message):
 
         with semaphore_talks:
             with ShowAction(message, 'record_audio'):
-                gender = 'female'
-                audio = my_tts.tts(text, lang, rate, gender=gender)
+                gender = 'male'
+                audio = None
+                try:
+                    audio = my_tts.tts(text, lang, rate, gender=gender)
+                except:
+                    pass
+                if not audio:
+                    audio = my_tts.tts(text, 'de', rate, gender=gender)
                 if audio:
                     try:
                         bot.send_voice(message.chat.id, audio, reply_to_message_id = message.message_id)
