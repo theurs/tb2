@@ -288,7 +288,7 @@ def dialog_add_user_request(chat_id: str, text: str, engine: str = 'gpt') -> str
     if engine == 'gpt':
         # пытаемся получить ответ
         try:
-            resp = gpt_basic.ai(prompt = text, messages = current_prompt + new_messages, chat_id=chat_id, max_tok=16000)
+            resp = gpt_basic.ai(prompt = text, messages = current_prompt + new_messages, chat_id=chat_id, max_tok=16000, timeout = 600)
             if resp:
                 new_messages = new_messages + [{"role":    "assistant",
                                                     "content": resp}]
