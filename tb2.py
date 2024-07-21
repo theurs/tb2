@@ -288,7 +288,7 @@ def dialog_add_user_request(chat_id: str, text: str, engine: str = 'gpt') -> str
     if engine == 'gpt':
         # пытаемся получить ответ
         try:
-            resp = gpt_basic.ai(prompt = text, messages = current_prompt + new_messages, chat_id=chat_id)
+            resp = gpt_basic.ai(prompt = text, messages = current_prompt + new_messages, chat_id=chat_id, max_tok=16000)
             if resp:
                 new_messages = new_messages + [{"role":    "assistant",
                                                     "content": resp}]
@@ -1980,12 +1980,15 @@ def do_task(message, custom_prompt: str = ''):
 
             with ShowAction(message, 'typing'):
                 try:
+                    start_time = time.time()
                     answer = my_groq.chat('(отвечай на русском языке) ' + message.text, chat_id_full)
+                    end_time = time.time()
+                    delta_time = round(end_time - start_time, 2)
                     my_log.log_echo(message, answer)
                     if answer:
                         answer = utils.bot_markdown_to_html(answer)
                         answer = answer.strip()
-                        answer += '\n\n[llama 3 70b]'
+                        answer += f'\n\n[llama 3 70b] [Generated in {delta_time} secs]'
                         try:
                             reply_to_long_message(message, answer, parse_mode='HTML', disable_web_page_preview = True, 
                                                     reply_markup=get_keyboard('chat', message))
@@ -2136,14 +2139,20 @@ def do_task(message, custom_prompt: str = ''):
                     print(f'tb:do_task: {error3}')
                     my_log.log2(f'tb:do_task: {error3}')
 
+
         elif CHAT_MODE[chat_id_full] == 'chatGPT':
             # if len(msg) > cfg.CHATGPT_MAX_REQUEST:
             #     bot.reply_to(message, f'Слишком длинное сообщение для chatGPT: {len(msg)} из {cfg.CHATGPT_MAX_REQUEST}')
             #     my_log.log_echo(message, f'Слишком длинное сообщение для chatGPT: {len(msg)} из {cfg.CHATGPT_MAX_REQUEST}')
             #     return
-            if len(msg) > my_shadowjourney.MAX_REQUEST:
-                bot.reply_to(message, f'Слишком длинное сообщение для chatGPT: {len(msg)} из {my_shadowjourney.MAX_REQUEST}')
-                my_log.log_echo(message, f'Слишком длинное сообщение для chatGPT: {len(msg)} из {my_shadowjourney.MAX_REQUEST}')
+            # if len(msg) > my_shadowjourney.MAX_REQUEST:
+            #     bot.reply_to(message, f'Слишком длинное сообщение для chatGPT: {len(msg)} из {my_shadowjourney.MAX_REQUEST}')
+            #     my_log.log_echo(message, f'Слишком длинное сообщение для chatGPT: {len(msg)} из {my_shadowjourney.MAX_REQUEST}')
+            #     return
+
+            if len(msg) > 40000:
+                bot.reply_to(message, f'Слишком длинное сообщение для chatGPT: {len(msg)} из {40000}')
+                my_log.log_echo(message, f'Слишком длинное сообщение для chatGPT: {len(msg)} из {40000}')
                 return
 
             # chatGPT, добавляем новый запрос пользователя в историю диалога пользователя
@@ -2161,10 +2170,13 @@ def do_task(message, custom_prompt: str = ''):
                     GPT_CHAT_LOCKS[chat_id_full] = lock
                 with lock:
                     # resp = my_shadowjourney.chat(message.text, chat_id_full)
+                    start_time = time.time()
                     resp = dialog_add_user_request(chat_id_full, message.text, 'gpt')
+                    end_time = time.time()
+                    delta_time = round(end_time - start_time, 2)
                     if resp:
                         resp = resp.strip()
-                        resp += '\n\n[chatGPT]'                      
+                        resp += f'\n\n[chatGPT] [Generated in {delta_time} secs]'
                         # добавляем ответ счетчик юзера что бы детектить спам
                         test_for_spam(resp, user_id)
                         
