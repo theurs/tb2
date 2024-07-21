@@ -2043,15 +2043,18 @@ def do_task(message, custom_prompt: str = ''):
 
             with ShowAction(message, 'typing'):
                 try:
+                    start_time = time.time()
                     answer = my_groq.chat(message.text,
                                           chat_id_full,
                                           model = 'gemma2-9b-it', 
                                           style='отвечай на русском языке')
+                    end_time = time.time()
+                    delta_time = round(end_time - start_time, 2)
                     my_log.log_echo(message, answer)
                     if answer:
                         answer = utils.bot_markdown_to_html(answer)
                         answer = answer.strip()
-                        answer += '\n\n[Gemma 2 9b]'
+                        answer += f'\n\n[Gemma 2 9b] [Generated in {delta_time} secs]'
                         try:
                             reply_to_long_message(message, answer, parse_mode='HTML', disable_web_page_preview = True, 
                                                     reply_markup=get_keyboard('chat', message))
