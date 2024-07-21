@@ -1966,7 +1966,7 @@ def do_task(message, custom_prompt: str = ''):
                     else:
                         # my_log.log_echo(message, resp, debug = True)
                         my_log.log_report(bot, message, chat_id_full, user_id, user_text, 'Google Bard не ответил', parse_mode='HTML')
-                        bot.reply_to(message, 'Google Bard не ответил')
+                        bot.reply_to(message, 'Google Bard не ответил, возможно /reset поможет')
                 except Exception as error3:
                     print(f'tb:do_task: {error3}')
                     my_log.log2(f'tb:do_task: {error3}')
@@ -1999,8 +1999,8 @@ def do_task(message, custom_prompt: str = ''):
                                                     reply_markup=get_keyboard('chat', message))
                         my_log.log_report(bot, message, chat_id_full, user_id, user_text, answer, parse_mode='HTML')
                     else:
-                        my_log.log_report(bot, message, chat_id_full, user_id, user_text, 'Gemini Pro не ответил', parse_mode='HTML')
-                        bot.reply_to(message, 'Лама не ответила')
+                        my_log.log_report(bot, message, chat_id_full, user_id, user_text, 'Лама не ответила', parse_mode='HTML')
+                        bot.reply_to(message, 'Лама не ответила, возможно /reset поможет')
                 except Exception as error3:
                     print(f'tb:do_task: {error3}')
                     my_log.log2(f'tb:do_task: {error3}')
@@ -2031,7 +2031,7 @@ def do_task(message, custom_prompt: str = ''):
                         my_log.log_report(bot, message, chat_id_full, user_id, user_text, answer, parse_mode='HTML')
                     else:
                         my_log.log_report(bot, message, chat_id_full, user_id, user_text, 'Claude 3 haiku не ответил', parse_mode='HTML')
-                        bot.reply_to(message, 'haiku не ответила')
+                        bot.reply_to(message, 'haiku не ответила, возможно /reset поможет')
                 except Exception as error3:
                     print(f'tb:do_task: {error3}')
                     my_log.log2(f'tb:do_task: {error3}')
@@ -2068,8 +2068,8 @@ def do_task(message, custom_prompt: str = ''):
                                                     reply_markup=get_keyboard('chat', message))
                         my_log.log_report(bot, message, chat_id_full, user_id, user_text, answer, parse_mode='HTML')
                     else:
-                        my_log.log_report(bot, message, chat_id_full, user_id, user_text, 'Claude 3 haiku не ответил', parse_mode='HTML')
-                        bot.reply_to(message, 'gemma2 не ответила')
+                        my_log.log_report(bot, message, chat_id_full, user_id, user_text, 'Gemma2 не ответила', parse_mode='HTML')
+                        bot.reply_to(message, 'gemma2 не ответила, возможно /reset поможет')
                 except Exception as error3:
                     print(f'tb:do_task: {error3}')
                     my_log.log2(f'tb:do_task: {error3}')
@@ -2101,7 +2101,7 @@ def do_task(message, custom_prompt: str = ''):
                         my_log.log_report(bot, message, chat_id_full, user_id, user_text, answer, parse_mode='HTML')
                     else:
                         my_log.log_report(bot, message, chat_id_full, user_id, user_text, 'Gemini Pro не ответил', parse_mode='HTML')
-                        bot.reply_to(message, 'Gemini Pro не ответил')
+                        bot.reply_to(message, 'Gemini Pro не ответил, возможно /reset поможет')
                 except Exception as error3:
                     print(f'tb:do_task: {error3}')
                     my_log.log2(f'tb:do_task: {error3}')
@@ -2134,7 +2134,7 @@ def do_task(message, custom_prompt: str = ''):
                     else:
                         # my_log.log_echo(message, resp, debug = True)
                         my_log.log_report(bot, message, chat_id_full, user_id, user_text, 'Claude Anthropic не ответил', parse_mode='HTML')
-                        bot.reply_to(message, 'Claude Anthropic не ответил')
+                        bot.reply_to(message, 'Claude Anthropic не ответил, возможно /reset поможет')
                 except Exception as error3:
                     print(f'tb:do_task: {error3}')
                     my_log.log2(f'tb:do_task: {error3}')
@@ -2198,7 +2198,7 @@ def do_task(message, custom_prompt: str = ''):
                     else:
                         # my_log.log_echo(message, resp, debug = True)
                         my_log.log_report(bot, message, chat_id_full, user_id, user_text, 'ChatGPT не ответил', parse_mode='HTML')
-                        bot.reply_to(message, 'ChatGPT не ответил')
+                        bot.reply_to(message, 'ChatGPT не ответил, возможно /reset поможет')
 
 
 def set_default_commands():
