@@ -710,7 +710,7 @@ def send_debug_history(message: telebot.types.Message):
         my_log.log_echo(message, prompt)
         reply_to_long_message(message, prompt, parse_mode = '', disable_web_page_preview = True)
     elif CHAT_MODE[chat_id_full] == 'gemma2-9b':
-        prompt = gpt_basic_3.get_mem_as_string(chat_id_full)
+        prompt = my_groq.get_mem_as_string(chat_id_full)
         if not prompt:
             prompt = 'Пусто'
         my_log.log_echo(message, prompt)
@@ -1064,7 +1064,7 @@ def clear_thread(message: telebot.types.Message):
         my_log.log_echo(message, 'История haiku принудительно очищена')
         my_log.log_report(bot, message, chat_id_full, user_id, 'забудь', 'История haiku принудительно очищена')
     elif chat_id_full in CHAT_MODE and CHAT_MODE[chat_id_full] == 'gemma2-9b':
-        gpt_basic_3.reset(chat_id_full)
+        my_groq.reset(chat_id_full)
         my_log.log_echo(message, 'История Gemma 2 9b принудительно очищена')
         my_log.log_report(bot, message, chat_id_full, user_id, 'забудь', 'История gemma2 принудительно очищена')
     bot.reply_to(message, 'Ок', parse_mode='Markdown')
@@ -2037,13 +2037,16 @@ def do_task(message, custom_prompt: str = ''):
         # если активирован gemma2
         elif CHAT_MODE[chat_id_full] == 'gemma2-9b':
             if len(msg) > gpt_basic_3.MAX_REQUEST:
-                bot.reply_to(message, f'Слишком длинное сообщение для gemma2: {len(msg)} из {gpt_basic_3.MAX_REQUEST}')
-                my_log.log_echo(message, f'Слишком длинное сообщение для gemma2: {len(msg)} из {gpt_basic_3.MAX_REQUEST}')
+                bot.reply_to(message, f'Слишком длинное сообщение для gemma2 9b: {len(msg)} из {my_groq.MAX_REQUEST}')
+                my_log.log_echo(message, f'Слишком длинное сообщение для gemma2 9b: {len(msg)} из {my_groq.MAX_REQUEST}')
                 return
 
             with ShowAction(message, 'typing'):
                 try:
-                    answer = gpt_basic_3.chat(message.text, chat_id_full)
+                    answer = my_groq.chat(message.text,
+                                          chat_id_full,
+                                          model = 'gemma2-9b-it', 
+                                          style='отвечай на русском языке')
                     my_log.log_echo(message, answer)
                     if answer:
                         answer = utils.bot_markdown_to_html(answer)

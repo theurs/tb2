@@ -21,7 +21,7 @@ import my_log
 LOCKS = {}
 
 # не принимать запросы больше чем, это ограничение для телеграм бота, в этом модуле оно не используется
-MAX_REQUEST = 6000
+MAX_REQUEST = 8000
 
 MAX_QUERY_LENGTH = 10000
 # максимальное количество запросов которые можно хранить в памяти
@@ -33,9 +33,9 @@ CHATS = SqliteDict('db/groq_dialogs.db', autocommit=True)
 def ai(prompt: str = '',
        system: str = '',
        mem_ = [],
-       temperature: float = 0.1,
+       temperature: float = 1,
        model_: str = '',
-       max_tokens_: int = 2000,
+       max_tokens_: int = 4000,
        key_: str = '',
        ) -> str:
     """
@@ -147,7 +147,7 @@ def update_mem(query: str, resp: str, mem):
 
 
 def chat(query: str, chat_id: str,
-         temperature: float = 0.1,
+         temperature: float = 1,
          update_memory: bool = True,
          model: str = '',
          style: str = '') -> str:
