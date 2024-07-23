@@ -37,6 +37,7 @@ def ai(prompt: str = '',
        model_: str = '',
        max_tokens_: int = 4000,
        key_: str = '',
+       timeout: int = 120,
        ) -> str:
     """
     Generates a response using the GROQ AI model.
@@ -57,7 +58,8 @@ def ai(prompt: str = '',
         Exception: If an error occurs during the generation of the response. The error message and traceback are logged.
     """
     try:
-        temperature = temperature / 2
+        if 'llama-3.1' in model_:
+            temperature = temperature / 2
         mem = []
         if mem_:
             if system:
@@ -99,6 +101,8 @@ def ai(prompt: str = '',
         )
 
         resp = chat_completion.choices[0].message.content
+        if not resp and model_ == 'llama-3.1' in model_:
+            return ai(prompt, system, mem_, temperature*2, model_, max_tokens_, key_, timeout)
         return resp
     except Exception as error:
         error_traceback = traceback.format_exc()
