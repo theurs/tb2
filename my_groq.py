@@ -101,8 +101,14 @@ def ai(prompt: str = '',
         )
 
         resp = chat_completion.choices[0].message.content
-        if not resp and model_ == 'llama-3.1' in model_:
-            return ai(prompt, system, mem_, temperature*2, model_, max_tokens_, key_, timeout)
+        if not resp and 'llama-3.1' in model_:
+            if model_ == 'llama-3.1-70b-versatile':
+                model__ = 'llama3-70b-8192'
+            elif model_ == 'llama-3.1-8b-instant':
+                model__ = 'llama3-8b-8192'
+            else:
+                return ''
+            return ai(prompt, system, mem_, temperature*2, model__, max_tokens_, key_, timeout)
         return resp
     except Exception as error:
         error_traceback = traceback.format_exc()
