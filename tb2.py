@@ -815,7 +815,7 @@ def geminimode(message: telebot.types.Message):
     if is_admin_member(message):
         chat_id_full = get_topic_id(message)
         CHAT_MODE[chat_id_full] = 'gemini'
-        bot.reply_to(message, 'Теперь бот отвечает как Gemini Pro в этой теме/чате')
+        bot.reply_to(message, 'Теперь бот отвечает как Gemini Flash в этой теме/чате')
     else:
         bot.reply_to(message, 'Эта команда только для администраторов')
 
@@ -2089,7 +2089,7 @@ def do_task(message, custom_prompt: str = ''):
                     if answer:
                         answer = utils.bot_markdown_to_html(answer)
                         answer = answer.strip()
-                        answer += '\n\n[Gemini Pro]'
+                        answer += '\n\n[Gemini Flash]'
                         try:
                             reply_to_long_message(message, answer, parse_mode='HTML', disable_web_page_preview = True, 
                                                     reply_markup=get_keyboard('chat', message))
@@ -2100,8 +2100,8 @@ def do_task(message, custom_prompt: str = ''):
                                                     reply_markup=get_keyboard('chat', message))
                         my_log.log_report(bot, message, chat_id_full, user_id, user_text, answer, parse_mode='HTML')
                     else:
-                        my_log.log_report(bot, message, chat_id_full, user_id, user_text, 'Gemini Pro не ответил', parse_mode='HTML')
-                        bot.reply_to(message, 'Gemini Pro не ответил, возможно /reset поможет')
+                        my_log.log_report(bot, message, chat_id_full, user_id, user_text, 'Gemini Flash не ответил', parse_mode='HTML')
+                        bot.reply_to(message, 'Gemini Flash не ответил, возможно /reset поможет')
                 except Exception as error3:
                     print(f'tb:do_task: {error3}')
                     my_log.log2(f'tb:do_task: {error3}')
