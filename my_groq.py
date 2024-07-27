@@ -58,7 +58,7 @@ def ai(prompt: str = '',
         Exception: If an error occurs during the generation of the response. The error message and traceback are logged.
     """
     try:
-        if 'llama-3.1' in model_:
+        if 'llama-3' in model_:
             temperature = temperature / 2
         mem = []
         if mem_:
