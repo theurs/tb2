@@ -58,8 +58,6 @@ def ai(prompt: str = '',
         Exception: If an error occurs during the generation of the response. The error message and traceback are logged.
     """
     try:
-        if 'llama-3' in model_:
-            temperature = temperature / 2
         mem = []
         if mem_:
             if system:
@@ -90,8 +88,11 @@ def ai(prompt: str = '',
         else:
             client = Groq(api_key=key, timeout = 120,)
 
-        # model="llama3-70b-8192", # llama3-8b-8192, mixtral-8x7b-32768, gemma-7b-it, whisper-large-v3??
-        model = model_ if model_ else 'llama3-70b-8192'
+        # model="llama3-70b-8192", # 'llama-3.1-70b-versatile', llama3-8b-8192, mixtral-8x7b-32768, gemma-7b-it, whisper-large-v3??
+        model = model_ if model_ else 'llama-3.1-70b-versatile'
+
+        if 'llama-3' in model_:
+            temperature = temperature / 2
 
         chat_completion = client.chat.completions.create(
             messages=mem,
