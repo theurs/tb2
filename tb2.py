@@ -793,7 +793,7 @@ def llamamode(message: telebot.types.Message):
     if is_admin_member(message):
         chat_id_full = get_topic_id(message)
         CHAT_MODE[chat_id_full] = 'llama'
-        bot.reply_to(message, 'Теперь бот отвечает как Groq llama 3 70b в этой теме/чате')
+        bot.reply_to(message, 'Теперь бот отвечает как Groq llama 3.1 70b в этой теме/чате')
     else:
         bot.reply_to(message, 'Эта команда только для администраторов')
 
@@ -1603,7 +1603,7 @@ def send_welcome_help(message: telebot.types.Message):
 
 /haiku - в этом чате будет отвечать claude 3 haiku
 /gemma2 - в этом чате будет отвечать Google Gemma 2 9b
-/llamamode - в этом чате будет отвечать llama 3 70b
+/llamamode - в этом чате будет отвечать llama 3.1 70b
 /chatgptmode - в этом чате будет отвечать ChatGPT
 /bardmode - в этом чате будет отвечать Google Bard
 /geminimode - в этом чате будет отвечать Google Bard
@@ -1988,7 +1988,7 @@ def do_task(message, custom_prompt: str = ''):
                     if answer:
                         answer = utils.bot_markdown_to_html(answer)
                         answer = answer.strip()
-                        answer += f'\n\n[llama 3 70b] [Generated in {delta_time} secs]'
+                        answer += f'\n\n[llama 3.1 70b] [Generated in {delta_time} secs]'
                         try:
                             reply_to_long_message(message, answer, parse_mode='HTML', disable_web_page_preview = True, 
                                                     reply_markup=get_keyboard('chat', message))
