@@ -11,7 +11,10 @@ fake_useragent
 fuzzywuzzy
 httpx[socks]
 google
-gradio_client
+
+# свежая версия выжирает цпу на сервере, а с этой не работают новые модные модельки
+gradio_client==0.14.0
+
 groq
 langcodes[data]
 langdetect
