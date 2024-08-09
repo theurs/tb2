@@ -2228,7 +2228,8 @@ def main():
     """
     #set_default_commands()
     my_gemini.run_proxy_pool_daemon()
-    bot.polling(timeout=90, long_polling_timeout = 90)
+    # bot.polling(timeout=90, long_polling_timeout = 90)
+    bot.infinity_polling(timeout=90, long_polling_timeout=90)
 
 
 if __name__ == '__main__':
